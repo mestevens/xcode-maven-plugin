@@ -3,6 +3,8 @@ package ca.mestevens.xcode_maven_plugin;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -59,13 +61,32 @@ public class XcodeTestMojo extends AbstractMojo {
 	 */
 	public boolean ignoreFailures;
 	
+	/**
+	 * @parameter
+	 */
+	public List<String> testSimulators;
+	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (skipTests) {
 			return;
 		}
 		try {
-			ProcessBuilder processBuilder = new ProcessBuilder(xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
-					"-sdk", "iphonesimulator", "test");
+			List<String> command = new ArrayList<String>();
+			command.add(xcodebuild);
+			command.add("-project");
+			command.add(xcodeProject);
+			command.add("-scheme");
+			command.add(xcodeScheme);
+			if (testSimulators.isEmpty()) {
+				testSimulators.add("iPhone 6");
+			}
+			for (String simulator : testSimulators) {
+				command.add("-destination");
+				command.add("platform=iOS Simulator,name=" + simulator + "");
+			}
+			command.add("test");
+			
+			ProcessBuilder processBuilder = new ProcessBuilder(command);
 			processBuilder.redirectErrorStream(true);
 			Process process = processBuilder.start();
 			BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
