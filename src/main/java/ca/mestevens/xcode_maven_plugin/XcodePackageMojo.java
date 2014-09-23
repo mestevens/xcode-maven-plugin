@@ -35,24 +35,32 @@ public class XcodePackageMojo extends AbstractMojo {
 	 * @required
 	 */
 	public String targetDirectory;
+	
+	/**
+	 * @parameter property="xcode.framework.name" default-value="${project.artifactId}"
+	 * @readonly
+	 * @required
+	 */
+	public String frameworkName;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		try {
-			ZipFile zippedFile = new ZipFile(targetDirectory + "/xcode_maven_plugin_test.xcode-framework");
-			File frameworkArtifact = new File(targetDirectory + "/xcode_maven_plugin_test.framework");
+			ZipFile zippedFile = new ZipFile(targetDirectory + "/" + frameworkName + ".xcode-framework");
+			File frameworkArtifact = new File(targetDirectory + "/" + frameworkName + ".framework");
 			if (zippedFile.getFile().exists()) {
 				FileUtils.deleteDirectory(zippedFile.getFile());
 			}
 			zippedFile.createZipFile(frameworkArtifact, new ZipParameters());
 			project.getArtifact().setFile(zippedFile.getFile());
 		} catch (ZipException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			getLog().error("Could not zip file: " + frameworkName);
+			getLog().error(e.getMessage());
+			throw new MojoFailureException("Could not zip file: " + frameworkName);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			getLog().error("Error deleting directory");
+			getLog().error(e.getMessage());
+			throw new MojoFailureException("Error deleting directory");
 		}
-		
 	}
 
 }

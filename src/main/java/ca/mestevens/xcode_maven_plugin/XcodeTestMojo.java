@@ -79,8 +79,10 @@ public class XcodeTestMojo extends AbstractMojo {
 			}
 		} catch (IOException e) {
 			getLog().error(e.getMessage());
+			throw new MojoFailureException(e.getMessage());
 		} catch (InterruptedException e) {
 			getLog().error(e.getMessage());
+			throw new MojoFailureException(e.getMessage());
 		}
 	}
 	

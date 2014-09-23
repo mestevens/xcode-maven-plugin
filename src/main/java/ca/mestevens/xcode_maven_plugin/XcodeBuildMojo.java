@@ -59,8 +59,10 @@ public class XcodeBuildMojo extends AbstractMojo {
 			process.waitFor();
 		} catch (IOException e) {
 			getLog().error(e.getMessage());
+			throw new MojoFailureException(e.getMessage());
 		} catch (InterruptedException e) {
 			getLog().error(e.getMessage());
+			throw new MojoFailureException(e.getMessage());
 		}
 	}
 

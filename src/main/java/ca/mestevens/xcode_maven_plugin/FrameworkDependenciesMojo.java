@@ -6,6 +6,7 @@ import net.lingala.zip4j.exception.ZipException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -59,7 +60,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	 */
 	protected RepositorySystemSession repoSession;
 
-	public void execute() throws MojoExecutionException {
+	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
 
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
@@ -88,11 +89,13 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					} catch (ZipException e) {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
 						getLog().error(e.getMessage());
+						throw new MojoFailureException("Could not unzip file: " + artifact.getArtifactId());
 					}
 
 				} catch (ArtifactResolutionException e) {
 					getLog().error("Could not resolve artifact: " + artifact.getArtifactId());
 					getLog().error(e.getMessage());
+					throw new MojoFailureException("Could not resolve artifact: " + artifact.getArtifactId());
 				}
 
 			}
