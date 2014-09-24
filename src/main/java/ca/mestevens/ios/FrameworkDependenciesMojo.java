@@ -1,13 +1,11 @@
 package ca.mestevens.ios;
 
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -16,7 +14,10 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 
+import ca.mestevens.ios.utils.ProcessRunner;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -79,16 +80,19 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					org.eclipse.aether.artifact.Artifact resultArtifact = artifactResult.getArtifact();
 					// Get File from result artifact
 					File file = resultArtifact.getFile();
+					File resultFile = new File(project.getBuild().getDirectory() + "/xcode-dependencies/frameworks/" + resultArtifact.getGroupId() + "/" + resultArtifact.getArtifactId());
+					
+					if (resultFile.exists()) {
+						FileUtils.deleteDirectory(resultFile);
+					}
+					
+					FileUtils.mkdir(resultFile.getAbsolutePath());
+					
+					ProcessRunner processRunner = new ProcessRunner(getLog());
+					int returnValue = processRunner.runProcess("unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 
-					// Unzip file
-					try {
-						getLog().info("Unarchiving artifact: " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion());
-						ZipFile zipFile = new ZipFile(file);
-						zipFile.extractAll(project.getBuild().getDirectory() + "/xcode-dependencies/frameworks/" + resultArtifact.getGroupId() + "/" + resultArtifact.getArtifactId());
-
-					} catch (ZipException e) {
+					if (returnValue != 0) {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
-						getLog().error(e.getMessage());
 						throw new MojoFailureException("Could not unzip file: " + artifact.getArtifactId());
 					}
 
@@ -96,6 +100,10 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					getLog().error("Could not resolve artifact: " + artifact.getArtifactId());
 					getLog().error(e.getMessage());
 					throw new MojoFailureException("Could not resolve artifact: " + artifact.getArtifactId());
+				} catch (IOException e) {
+					getLog().error("Problem creating/deleting framework file: " + artifact.getArtifactId());
+					getLog().error(e.getMessage());
+					throw new MojoFailureException("Problem creating/deleting framework file: " + artifact.getArtifactId());
 				}
 
 			}

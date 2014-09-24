@@ -23,16 +23,16 @@
 						<id>default</id>
 						<phases>
 							<initialize>
-								ca.mestevens:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
 							</initialize>
 							<compile>
-								ca.mestevens:xcode-maven-plugin:xcode-build
+								ca.mestevens.ios:xcode-maven-plugin:xcode-build
 							</compile>
 							<package>
-								ca.mestevens:xcode-maven-plugin:xcode-package-framework
+								ca.mestevens.ios:xcode-maven-plugin:xcode-package-framework
 							</package>
 							<test>
-								ca.mestevens:xcode-maven-plugin:xcode-test
+								ca.mestevens.ios:xcode-maven-plugin:xcode-test
 							</test>
 							<install>
 								org.apache.maven.plugins:maven-install-plugin:install

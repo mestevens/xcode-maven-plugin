@@ -3,15 +3,13 @@ package ca.mestevens.ios;
 import java.io.File;
 import java.io.IOException;
 
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-import net.lingala.zip4j.model.ZipParameters;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
+
+import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -43,19 +41,20 @@ public class XcodePackageMojo extends AbstractMojo {
 	 */
 	public String frameworkName;
 
-	public void execute() throws MojoExecutionException, MojoFailureException {
+	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
-			ZipFile zippedFile = new ZipFile(targetDirectory + "/" + frameworkName + ".xcode-framework");
+			ProcessRunner processRunner = new ProcessRunner(getLog());
+			File zippedFile = new File(targetDirectory + "/" + frameworkName + ".xcode-framework");
 			File frameworkArtifact = new File(targetDirectory + "/" + frameworkName + ".framework");
-			if (zippedFile.getFile().exists()) {
-				FileUtils.deleteDirectory(zippedFile.getFile());
+			if (zippedFile.exists()) {
+				FileUtils.deleteDirectory(zippedFile);
 			}
-			zippedFile.createZipFile(frameworkArtifact, new ZipParameters());
-			project.getArtifact().setFile(zippedFile.getFile());
-		} catch (ZipException e) {
-			getLog().error("Could not zip file: " + frameworkName);
-			getLog().error(e.getMessage());
-			throw new MojoFailureException("Could not zip file: " + frameworkName);
+			int returnValue = processRunner.runProcess("zip", "-r", zippedFile.getAbsolutePath(), frameworkArtifact.getAbsolutePath());
+			
+			if (returnValue != 0) {
+				getLog().error("Could not zip file: " + frameworkName);
+				throw new MojoFailureException("Could not zip file: " + frameworkName);
+			}
 		} catch (IOException e) {
 			getLog().error("Error deleting directory");
 			getLog().error(e.getMessage());

@@ -56,7 +56,11 @@ public class XcodeBuildMojo extends AbstractMojo {
 			while ((line = input.readLine()) != null) {
 				getLog().info(line);
 			}
-			process.waitFor();
+			int returnValue = process.waitFor();
+			
+			if (returnValue != 0) {
+				throw new MojoFailureException("Failed to build project.");
+			}
 		} catch (IOException e) {
 			getLog().error(e.getMessage());
 			throw new MojoFailureException(e.getMessage());
