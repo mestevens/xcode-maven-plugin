@@ -45,16 +45,17 @@ public class XcodePackageMojo extends AbstractMojo {
 		try {
 			ProcessRunner processRunner = new ProcessRunner(getLog());
 			File zippedFile = new File(targetDirectory + "/" + frameworkName + ".xcode-framework");
-			File frameworkArtifact = new File(targetDirectory + "/" + frameworkName + ".framework");
 			if (zippedFile.exists()) {
 				FileUtils.deleteDirectory(zippedFile);
 			}
-			int returnValue = processRunner.runProcess("zip", "-r", zippedFile.getAbsolutePath(), frameworkArtifact.getAbsolutePath());
+			int returnValue = processRunner.runProcess(targetDirectory, "zip", "-r", frameworkName + ".xcode-framework", frameworkName + ".framework");
 			
 			if (returnValue != 0) {
 				getLog().error("Could not zip file: " + frameworkName);
 				throw new MojoFailureException("Could not zip file: " + frameworkName);
 			}
+			
+			project.getArtifact().setFile(zippedFile);
 		} catch (IOException e) {
 			getLog().error("Error deleting directory");
 			getLog().error(e.getMessage());

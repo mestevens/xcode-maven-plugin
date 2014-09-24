@@ -77,6 +77,9 @@ public class XcodeTestMojo extends AbstractMojo {
 			command.add(xcodeProject);
 			command.add("-scheme");
 			command.add(xcodeScheme);
+			if (testSimulators == null) {
+				testSimulators = new ArrayList<String>();
+			}
 			if (testSimulators.isEmpty()) {
 				testSimulators.add("iPhone 6");
 			}

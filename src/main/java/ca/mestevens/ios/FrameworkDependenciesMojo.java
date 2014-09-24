@@ -63,7 +63,6 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
-
 		Set<Artifact> artifacts = project.getDependencyArtifacts();
 
 		for (Artifact artifact : artifacts) {
@@ -89,7 +88,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					FileUtils.mkdir(resultFile.getAbsolutePath());
 					
 					ProcessRunner processRunner = new ProcessRunner(getLog());
-					int returnValue = processRunner.runProcess("unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
+					int returnValue = processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 
 					if (returnValue != 0) {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
