@@ -1,4 +1,4 @@
-package ca.mestevens.xcode_maven_plugin;
+package ca.mestevens.ios;
 
 import java.io.File;
 import java.io.IOException;

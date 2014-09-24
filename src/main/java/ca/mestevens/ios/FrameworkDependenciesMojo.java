@@ -1,4 +1,4 @@
-package ca.mestevens.xcode_maven_plugin;
+package ca.mestevens.ios;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
