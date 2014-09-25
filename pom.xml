@@ -5,7 +5,7 @@
 	<groupId>ca.mestevens.ios</groupId>
 	<artifactId>xcode-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
-	<version>0.2.3</version>
+	<version>0.2.5</version>
 	<name>xcode-maven-plugin</name>
 
 	<licenses>
@@ -42,6 +42,12 @@
 					<pushReleases>true</pushReleases>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.shared</groupId>
+				<artifactId>maven-artifact-resolver</artifactId>
+				<version>1.0</version>
+			</plugin>
+
 		</plugins>
 	</build>
 

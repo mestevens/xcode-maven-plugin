@@ -1,6 +1,5 @@
 package ca.mestevens.ios;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -8,18 +7,23 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.artifact.JavaScopes;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -63,23 +67,46 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
-		Set<Artifact> artifacts = project.getDependencyArtifacts();
+		
+		CollectRequest collectRequest = new CollectRequest();
+		final Artifact mainArtifact = new DefaultArtifact(project.getArtifact().getId());
+		collectRequest.setRoot(new Dependency(mainArtifact, JavaScopes.COMPILE));
+		collectRequest.setRepositories(projectRepos);
+		DependencyRequest dependencyRequest = new DependencyRequest().setCollectRequest(collectRequest);
+		dependencyRequest.setFilter(new DependencyFilter() {
 
-		for (Artifact artifact : artifacts) {
-			if (artifact.getType().equals("xcode-framework")) {
-				getLog().info("Attempting to resolve artifact: " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion());
-				org.eclipse.aether.artifact.Artifact defaultArtifact = new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(), "xcode-framework", artifact.getVersion());
+			public boolean accept(DependencyNode node,
+					List<DependencyNode> parents) {
+				Artifact nodeArtifact = node.getArtifact();
+				
+				if (nodeArtifact.getGroupId().equals(mainArtifact.getGroupId()) &&
+						nodeArtifact.getArtifactId().equals(mainArtifact.getArtifactId())) {
+					return false;
+				}
+				return true;
+			}
+			
+		});
+		List<ArtifactResult> resolvedArtifacts;
+		try {
+			
+			resolvedArtifacts = repoSystem.resolveDependencies(repoSession, dependencyRequest).getArtifactResults();
+		} catch (DependencyResolutionException e) {
+			getLog().error("Could not resolve dependencies");
+			getLog().error(e.getMessage());
+			throw new MojoFailureException("Could not resolve dependencies");
+		}
 
-				ArtifactRequest artifactRequest = new ArtifactRequest();
-				artifactRequest.setRepositories(projectRepos);
-				artifactRequest.setArtifact(defaultArtifact);
-
+		for (ArtifactResult resolvedArtifact : resolvedArtifacts) {
+			Artifact artifact = resolvedArtifact.getArtifact();
+			for(String key : artifact.getProperties().keySet()) {
+				getLog().info(key + artifact.getProperty(key, ""));
+			}
+			if (artifact.getProperty("type", "").equals("xcode-framework")) {
 				try {
-					ArtifactResult artifactResult = repoSystem.resolveArtifact(repoSession, artifactRequest);
-					org.eclipse.aether.artifact.Artifact resultArtifact = artifactResult.getArtifact();
 					// Get File from result artifact
-					File file = resultArtifact.getFile();
-					File resultFile = new File(project.getBuild().getDirectory() + "/xcode-dependencies/frameworks/" + resultArtifact.getGroupId() + "/" + resultArtifact.getArtifactId());
+					File file = artifact.getFile();
+					File resultFile = new File(project.getBuild().getDirectory() + "/xcode-dependencies/frameworks/" + artifact.getGroupId() + "/" + artifact.getArtifactId());
 					
 					if (resultFile.exists()) {
 						FileUtils.deleteDirectory(resultFile);
@@ -94,11 +121,6 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
 						throw new MojoFailureException("Could not unzip file: " + artifact.getArtifactId());
 					}
-
-				} catch (ArtifactResolutionException e) {
-					getLog().error("Could not resolve artifact: " + artifact.getArtifactId());
-					getLog().error(e.getMessage());
-					throw new MojoFailureException("Could not resolve artifact: " + artifact.getArtifactId());
 				} catch (IOException e) {
 					getLog().error("Problem creating/deleting framework file: " + artifact.getArtifactId());
 					getLog().error(e.getMessage());
