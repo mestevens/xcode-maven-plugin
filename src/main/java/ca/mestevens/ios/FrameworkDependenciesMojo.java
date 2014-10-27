@@ -20,9 +20,11 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import ca.mestevens.ios.utils.ProcessRunner;
+import ca.mestevens.ios.utils.XcodeFileUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -64,6 +66,20 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	 * @readonly
 	 */
 	protected RepositorySystemSession repoSession;
+	
+	/**
+	 * @parameter property="xcode.add.frameworks" default-value="false"
+	 * @readonly
+	 * @required
+	 */
+	public boolean addFrameworks;
+	
+	/**
+	 * @parameter property="xcode.project.name" default-value="${project.artifactId}.xcodeproj"
+	 * @readonly
+	 * @required
+	 */
+	public String xcodeProjectName;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
@@ -97,6 +113,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 			throw new MojoFailureException("Could not resolve dependencies");
 		}
 
+		List<File> frameworkFiles = new ArrayList<File>();
 		for (ArtifactResult resolvedArtifact : resolvedArtifacts) {
 			Artifact artifact = resolvedArtifact.getArtifact();
 			for(String key : artifact.getProperties().keySet()) {
@@ -116,11 +133,14 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					
 					ProcessRunner processRunner = new ProcessRunner(getLog());
 					int returnValue = processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
+					
+					frameworkFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
 
 					if (returnValue != 0) {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
 						throw new MojoFailureException("Could not unzip file: " + artifact.getArtifactId());
 					}
+					
 				} catch (IOException e) {
 					getLog().error("Problem creating/deleting framework file: " + artifact.getArtifactId());
 					getLog().error(e.getMessage());
@@ -128,6 +148,19 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 				}
 
 			}
+		}
+		
+		if (addFrameworks) {
+			XcodeFileUtil fileUtil;
+			try {
+				fileUtil = new XcodeFileUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
+				fileUtil.addFrameworks(frameworkFiles);
+				fileUtil.writeFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 
 	}
