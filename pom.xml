@@ -92,5 +92,10 @@
    			<version>1.14.8</version>
    			<scope>provided</scope>
    		</dependency>
+   		<dependency>
+   			<groupId>ca.mestevens.ios</groupId>
+   			<artifactId>xcode-project-parser</artifactId>
+   			<version>0.0.2</version>
+   		</dependency>
 	</dependencies>
 </project>

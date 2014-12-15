@@ -20,10 +20,18 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import ca.mestevens.ios.utils.ProcessRunner;
-import ca.mestevens.ios.utils.XcodeFileUtil;
+import ca.mestevens.ios.xcode.parser.models.CommentedIdentifier;
+import ca.mestevens.ios.xcode.parser.models.PBXBuildFile;
+import ca.mestevens.ios.xcode.parser.models.PBXBuildPhase;
+import ca.mestevens.ios.xcode.parser.models.PBXFileElement;
+import ca.mestevens.ios.xcode.parser.models.PBXTarget;
+import ca.mestevens.ios.xcode.parser.models.XCConfigurationList;
+import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,9 +124,6 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 		List<File> frameworkFiles = new ArrayList<File>();
 		for (ArtifactResult resolvedArtifact : resolvedArtifacts) {
 			Artifact artifact = resolvedArtifact.getArtifact();
-			for(String key : artifact.getProperties().keySet()) {
-				getLog().info(key + artifact.getProperty(key, ""));
-			}
 			if (artifact.getProperty("type", "").equals("xcode-framework")) {
 				try {
 					// Get File from result artifact
@@ -149,19 +154,126 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 
 			}
 		}
-		
 		if (addFrameworks) {
-			XcodeFileUtil fileUtil;
 			try {
-				fileUtil = new XcodeFileUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
-				fileUtil.addFrameworks(frameworkFiles);
-				fileUtil.writeFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				XCodeProject xcodeProject = new XCodeProject(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
+				List<CommentedIdentifier> embedPhaseIdentifiers = new ArrayList<CommentedIdentifier>();
+				List<CommentedIdentifier> fileReferenceIdentifiers = new ArrayList<CommentedIdentifier>();
+				//Add the framework files as file references and build files
+				for (File frameworkFile : frameworkFiles) {
+					String frameworkPath = frameworkFile.getAbsolutePath().substring(frameworkFile.getAbsolutePath().lastIndexOf("target"));
+					PBXFileElement fileReference = xcodeProject.createFileReference(frameworkPath, "SOURCE_ROOT");
+					PBXBuildFile buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, frameworkFile.getName());
+					embedPhaseIdentifiers.add(buildFile.getReference());
+					fileReferenceIdentifiers.add(fileReference.getReference());
+				}
+				PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase("PBXCopyFilesBuildPhase", "\"Embed Frameworks\"", embedPhaseIdentifiers, "\"\"", 10);
+				//If the Embed Frameworks phase doesn't exist, create it
+				boolean foundExistingPhase = false;
+				for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {
+					if (copyFilesBuildPhase.getReference().getComment().equals("\"Embed Frameworks\"")) {
+						for(CommentedIdentifier identifier : embedPhaseIdentifiers) {
+							if (!copyFilesBuildPhase.getFiles().contains(identifier)) {
+								copyFilesBuildPhase.getFiles().add(identifier);
+							}
+						}
+						foundExistingPhase = true;
+					}
+				}
+				//Grab the first target
+				String firstTargetIdentifier = xcodeProject.getProject().getTargets().get(0).getIdentifier();
+				if (!foundExistingPhase) {
+					xcodeProject.addCopyFilesBuildPhase(firstTargetIdentifier, copyFrameworksBuildPhase);
+				}
+				//Get the configuration list identifier for the first target
+				String existingFrameworksPhaseId = null;
+				String buildConfigurationList = null;
+				PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(firstTargetIdentifier);
+				for(CommentedIdentifier buildPhaseIdentifier : nativeTarget.getBuildPhases()) {
+					if (buildPhaseIdentifier.getComment().equals("Frameworks")) {
+						existingFrameworksPhaseId = buildPhaseIdentifier.getIdentifier();
+						buildConfigurationList = nativeTarget.getBuildConfigurationList().getIdentifier();
+						break;
+					}
+				}
+				//Add the framework build files to the frameworks build phase
+				PBXBuildPhase frameworksBuildPhase = xcodeProject.getFrameworksBuildPhaseWithIdentifier(existingFrameworksPhaseId);
+				if (frameworksBuildPhase.getReference().getIdentifier().equals(existingFrameworksPhaseId)) {
+					for(CommentedIdentifier identifier : embedPhaseIdentifiers) {
+						if (!frameworksBuildPhase.getFiles().contains(identifier)) {
+							frameworksBuildPhase.getFiles().add(identifier);
+						}
+					}
+				}
+				//Add the properties to the build configuration
+				XCConfigurationList configuration = xcodeProject.getConfigurationListWithIdentifier(buildConfigurationList);
+				for(CommentedIdentifier identifier : configuration.getBuildConfigurations()) {
+					//FRAMEWORK_SEARCH_PATHS
+					List<String> frameworkSearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), "FRAMEWORK_SEARCH_PATHS");
+					if (frameworkSearchPaths != null) {
+						if (!frameworkSearchPaths.contains("\"${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\"")) {
+							frameworkSearchPaths.add("\"${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\"");
+							xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), "FRAMEWORK_SEARCH_PATHS", frameworkSearchPaths);
+						}
+					} else {
+						frameworkSearchPaths = new ArrayList<String>();
+						frameworkSearchPaths.add("\"${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\"");
+						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), "FRAMEWORK_SEARCH_PATHS", frameworkSearchPaths);
+					}
+					//LD_RUNPATH_SEARCH_PATHS
+					String ldRunpathSearchPaths = xcodeProject.getBuildConfigurationProperty(identifier.getIdentifier(), "LD_RUNPATH_SEARCH_PATHS");
+					if (ldRunpathSearchPaths != null) {
+						if (ldRunpathSearchPaths.startsWith("\"")) {
+							ldRunpathSearchPaths = ldRunpathSearchPaths.substring(1);
+						}
+						if (ldRunpathSearchPaths.endsWith("\"")) {
+							ldRunpathSearchPaths = ldRunpathSearchPaths.substring(0, ldRunpathSearchPaths.length() - 1);
+						}
+						ldRunpathSearchPaths = ldRunpathSearchPaths.trim();
+						if (!ldRunpathSearchPaths.contains("@loader_path/Frameworks")) {
+							ldRunpathSearchPaths = ldRunpathSearchPaths.concat(" @loader_path/Frameworks");
+						}
+						if (!ldRunpathSearchPaths.contains("@executable_path/Frameworks")) {
+							ldRunpathSearchPaths = ldRunpathSearchPaths.concat(" @executable_path/Frameworks");
+						}
+						ldRunpathSearchPaths = "\"" + ldRunpathSearchPaths + "\"";
+						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), "LD_RUNPATH_SEARCH_PATHS", ldRunpathSearchPaths);
+					} else {
+						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), "LD_RUNPATH_SEARCH_PATHS", "\"@loader_path/Frameworks @executable_path/Frameworks\"");
+					}
+				}
+				//Add/Edit the Frameworks group
+				String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();
+				String groupIdentifier = xcodeProject.getGroupWithIdentifier(mainGroupIdentifier).getChildren().get(0).getIdentifier();
+				PBXFileElement group = xcodeProject.getGroupWithIdentifier(groupIdentifier);
+				String frameworkGroupIdentifier = null;
+				for(CommentedIdentifier child : group.getChildren()) {
+					if (child.getComment().equals("Frameworks")) {
+						frameworkGroupIdentifier = child.getIdentifier();
+					}
+				}
+				PBXFileElement frameworkGroup = null;
+				if (frameworkGroupIdentifier != null) {
+					frameworkGroup = xcodeProject.getGroupWithIdentifier(frameworkGroupIdentifier);
+				} else {
+					frameworkGroup = xcodeProject.createGroup("Frameworks", groupIdentifier);
+				}
+				for (CommentedIdentifier fileReference : fileReferenceIdentifiers) {
+					boolean found = false;
+					for (CommentedIdentifier child : frameworkGroup.getChildren()) {
+						if (child.getIdentifier().equals(fileReference.getIdentifier())) {
+							found = true;
+						}
+					}
+					if (!found) {
+						frameworkGroup.addChild(fileReference);
+					}
+				}
+				//Write out the updated xcode project
+				Files.write(Paths.get(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj"), xcodeProject.toString().getBytes());
+			} catch (Exception ex) {
+				throw new MojoExecutionException(ex.getMessage());
 			}
-			
 		}
-
 	}
 }
