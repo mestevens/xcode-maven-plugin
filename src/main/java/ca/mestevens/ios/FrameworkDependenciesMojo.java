@@ -159,21 +159,50 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 				XCodeProject xcodeProject = new XCodeProject(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
 				List<CommentedIdentifier> embedPhaseIdentifiers = new ArrayList<CommentedIdentifier>();
 				List<CommentedIdentifier> fileReferenceIdentifiers = new ArrayList<CommentedIdentifier>();
+				//TODO Doesn't seem to be doing anything atm, take a look at it
+				List<CommentedIdentifier> copyIdentifiers = new ArrayList<CommentedIdentifier>();
 				//Add the framework files as file references and build files
 				for (File frameworkFile : frameworkFiles) {
 					String frameworkPath = frameworkFile.getAbsolutePath().substring(frameworkFile.getAbsolutePath().lastIndexOf("target"));
-					PBXFileElement fileReference = xcodeProject.createFileReference(frameworkPath, "SOURCE_ROOT");
-					PBXBuildFile buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, frameworkFile.getName());
+					PBXFileElement fileReference = xcodeProject.getFileReferenceWithPath(frameworkPath);
+					if (fileReference == null) {
+						fileReference = xcodeProject.createFileReference(frameworkPath, "SOURCE_ROOT");
+					}
+					List<PBXBuildFile> buildFiles = xcodeProject.getBuildFileWithFileRefPath(frameworkPath);
+					PBXBuildFile buildFile = null;
+					PBXBuildFile copyBuildFile = null;
+					for (PBXBuildFile existingFile : buildFiles) {
+						if (existingFile.getReference().getComment().equals(frameworkFile.getName() + " in Frameworks")) {
+							buildFile = existingFile;
+						} else if (existingFile.getReference().getComment().equals(frameworkFile.getName() + " in Embed Frameworks")) {
+							copyBuildFile = existingFile;
+						}
+					}
+					if (buildFile == null) {
+						buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, frameworkFile.getName() + " in Frameworks");
+					}
+					if (copyBuildFile == null) {
+						copyBuildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, frameworkFile.getName() + " in Embed Frameworks");
+						copyBuildFile.getSettings().put("ATTRIBUTES", "(CodeSignOnCopy, )");
+					}
+					
 					embedPhaseIdentifiers.add(buildFile.getReference());
 					fileReferenceIdentifiers.add(fileReference.getReference());
+					copyIdentifiers.add(copyBuildFile.getReference());
 				}
-				PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase("PBXCopyFilesBuildPhase", "\"Embed Frameworks\"", embedPhaseIdentifiers, "\"\"", 10);
+				PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase("PBXCopyFilesBuildPhase", "\"Embed Frameworks\"", copyIdentifiers, "\"\"", 10);
 				//If the Embed Frameworks phase doesn't exist, create it
 				boolean foundExistingPhase = false;
 				for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {
 					if (copyFilesBuildPhase.getReference().getComment().equals("\"Embed Frameworks\"")) {
-						for(CommentedIdentifier identifier : embedPhaseIdentifiers) {
-							if (!copyFilesBuildPhase.getFiles().contains(identifier)) {
+						for(CommentedIdentifier identifier : copyIdentifiers) {
+							boolean foundFile = false;
+							for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {
+								if (fileIdentifier.getComment().equals(identifier.getComment())) {
+									foundFile = true;
+								}
+							}
+							if (!foundFile) {
 								copyFilesBuildPhase.getFiles().add(identifier);
 							}
 						}
@@ -261,7 +290,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 				for (CommentedIdentifier fileReference : fileReferenceIdentifiers) {
 					boolean found = false;
 					for (CommentedIdentifier child : frameworkGroup.getChildren()) {
-						if (child.getIdentifier().equals(fileReference.getIdentifier())) {
+						if (child.getComment().equals(fileReference.getComment())) {
 							found = true;
 						}
 					}
@@ -272,6 +301,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 				//Write out the updated xcode project
 				Files.write(Paths.get(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj"), xcodeProject.toString().getBytes());
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				throw new MojoExecutionException(ex.getMessage());
 			}
 		}
