@@ -8,6 +8,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 import ca.mestevens.ios.utils.ProcessRunner;
+import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
+import ca.mestevens.ios.xcode.parser.models.CommentedIdentifier;
+import ca.mestevens.ios.xcode.parser.models.XCBuildConfiguration;
+import ca.mestevens.ios.xcode.parser.models.XCConfigurationList;
+import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -54,38 +59,72 @@ public class XcodeBuildMojo extends AbstractMojo {
 	public String frameworkName;
 	
 	/**
-	 * @parameter property="xcode.build.64bit" default-value=true
+	 * @parameter property="xcode.simulator.archs"
 	 * @readonly
-	 * @required
 	 */
-	public boolean build64bit;
+	public List<String> simulatorArchs;
+	
+	/**
+	 * @parameter property="xcode.device.archs"
+	 * @readonly
+	 */
+	public List<String> deviceArchs;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		ProcessRunner processRunner = new ProcessRunner(getLog());
-		int returnValue = processRunner.runProcess(null, xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
-				"-sdk", "iphonesimulator", "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator", "build");
-		checkReturnValue(returnValue);
-		if (build64bit) {
+		if (simulatorArchs == null || simulatorArchs.size() == 0) {
+			simulatorArchs = new ArrayList<String>();
+			simulatorArchs.add("i386");
+			simulatorArchs.add("x86_64");
+		}
+		if (deviceArchs == null || deviceArchs.size() == 0) {
+			deviceArchs = new ArrayList<String>();
+			try {
+				XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
+				XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
+				for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
+					XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
+					if (buildConfiguration != null) {
+						List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
+						if (archs != null) {
+							deviceArchs = archs;
+							break;
+						}
+					}
+				}
+			} catch (InvalidObjectFormatException e) {
+				throw new MojoExecutionException(e.getMessage());
+			}
+			if (deviceArchs == null || deviceArchs.size() == 0) {
+				deviceArchs.add("armv7");
+				deviceArchs.add("arm64");
+			}
+		}
+		int returnValue = 0;
+		for (String simulatorArch : simulatorArchs) {
 			returnValue = processRunner.runProcess(null, xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
-					"-sdk", "iphonesimulator", "-arch", "x86_64", "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator6", "build");
+					"-sdk", "iphonesimulator", "-arch", simulatorArch, "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator-" + simulatorArch, "build");
 			checkReturnValue(returnValue);
 		}
-		returnValue = processRunner.runProcess(null, xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
-				"-sdk", "iphoneos", "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphoneos", "build");
-		checkReturnValue(returnValue);
+		for (String deviceArch : deviceArchs) {
+			returnValue = processRunner.runProcess(null, xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
+					"-sdk", "iphoneos", "-arch", deviceArch, "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphoneos-" + deviceArch, "build");
+			checkReturnValue(returnValue);
+		}
 		List<String> lipoCommand = new ArrayList<String>();
 		lipoCommand.add("lipo");
 		lipoCommand.add("-create");
 		lipoCommand.add("-output");
 		lipoCommand.add(frameworkName);
-		lipoCommand.add("iphonesimulator/" + frameworkName + ".framework/" + frameworkName);
-		if (build64bit) {
-			lipoCommand.add("iphonesimulator6/" + frameworkName + ".framework/" + frameworkName);
+		for (String simulatorArch : simulatorArchs) {
+			lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + frameworkName + ".framework/" + frameworkName);
 		}
-		lipoCommand.add("iphoneos/" + frameworkName + ".framework/" + frameworkName);
+		for (String deviceArch : deviceArchs) {
+			lipoCommand.add("iphoneos-" + deviceArch + "/" + frameworkName + ".framework/" + frameworkName);
+		}
 		returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 		checkReturnValue(returnValue);
-		processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos/" + frameworkName + ".framework", ".");
+		processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + frameworkName + ".framework", ".");
 		processRunner.runProcess(targetDirectory, "cp", frameworkName, frameworkName + ".framework/.");
 	}
 	
