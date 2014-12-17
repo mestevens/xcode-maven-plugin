@@ -25,6 +25,18 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+			<role-hint>xcode-application</role-hint>
+			<implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+			</implementation>
+			<configuration>
+				<extension>xcode-application</extension>
+				<language>objective-c</language>
+				<addedToClasspath>true</addedToClasspath>
+				<includesDependencies>false</includesDependencies>
+			</configuration>
+		</component>
+		<component>
 			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
 			<role-hint>xcode-framework</role-hint>
 			<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
@@ -93,6 +105,32 @@
 							<deploy>
 								org.apache.maven.plugins:maven-deploy-plugin:deploy
 							</deploy>
+						</phases>
+					</lifecycle>
+					<lifecycle>
+						<id>clean</id>
+						<phases>
+							<clean>
+								org.apache.maven.plugins:maven-clean-plugin:clean
+							</clean>
+						</phases>
+					</lifecycle>
+				</lifecycles>
+			</configuration>
+		</component>
+		<component>
+			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+			<role-hint>xcode-application</role-hint>
+			<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+			</implementation>
+			<configuration>
+				<lifecycles>
+					<lifecycle>
+						<id>default</id>
+						<phases>
+							<initialize>
+								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+							</initialize>
 						</phases>
 					</lifecycle>
 					<lifecycle>
