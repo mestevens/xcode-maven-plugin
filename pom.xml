@@ -4,9 +4,19 @@
 
 	<groupId>ca.mestevens.ios</groupId>
 	<artifactId>xcode-maven-plugin</artifactId>
-	<packaging>maven-plugin</packaging>
 	<version>0.3.2-SNAPSHOT</version>
+	<packaging>maven-plugin</packaging>
 	<name>xcode-maven-plugin</name>
+	<description>A maven plugin to facilitate xcode building/dependency management/testing</description>
+	<url>https://github.com/mestevens/xcode-maven-plugin</url>
+
+	<developers>
+		<developer>
+			<name>Matthew Stevens</name>
+			<email>mestevens@live.ca</email>
+			<organizationUrl>https://github.com/mestevens</organizationUrl>
+		</developer>
+	</developers>
 
 	<licenses>
 		<license>
@@ -17,8 +27,37 @@
 	</licenses>
 
 	<scm>
-		<url>https://github.com/mestevens/xcode-maven-plugin</url>
+		<connection>scm:git:git@github.com:mestevens/xcode-maven-plugin.git</connection>
+		<developerConnection>scm:git:git@github.com:mestevens/xcode-maven-plugin.git</developerConnection>
+		<url>git@github.com:mestevens/xcode-maven-plugin.git</url>
 	</scm>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<build>
 		<resources>
@@ -48,13 +87,48 @@
 				<version>1.0</version>
 			</plugin>
 			<plugin>
-        		<groupId>org.apache.maven.plugins</groupId>
-        		<artifactId>maven-surefire-plugin</artifactId>
-        		<version>2.17</version>
-        		<configuration>
-          			<groups>automated</groups>
-        		</configuration>
-      		</plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.17</version>
+				<configuration>
+					<groups>automated</groups>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-site-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-descriptor</id>
+						<goals>
+							<goal>attach-descriptor</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -81,16 +155,35 @@
 			<version>1.0.0.v20140518</version>
 		</dependency>
 		<dependency>
-      		<groupId>org.testng</groupId>
-      		<artifactId>testng</artifactId>
-      		<version>6.3.1</version>
-      		<scope>test</scope>
-   		</dependency>
-   		<dependency>
-   			<groupId>org.projectlombok</groupId>
-   			<artifactId>lombok</artifactId>
-   			<version>1.14.8</version>
-   			<scope>provided</scope>
-   		</dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>6.3.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.14.8</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>ca.mestevens.ios</groupId>
+			<artifactId>xcode-project-parser</artifactId>
+			<version>0.0.3</version>
+		</dependency>
 	</dependencies>
+	
+	<distributionManagement>
+		<repository>
+			<id>sonatype-oss</id>
+			<name>Sonatype OSS</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>sonatype-oss</id>
+			<name>Sonatype OSS</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
 </project>

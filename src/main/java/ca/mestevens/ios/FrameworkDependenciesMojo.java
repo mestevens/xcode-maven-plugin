@@ -20,7 +20,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import ca.mestevens.ios.utils.ProcessRunner;
-import ca.mestevens.ios.utils.XcodeFileUtil;
+import ca.mestevens.ios.utils.XCodeProjectUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,11 +68,11 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	protected RepositorySystemSession repoSession;
 	
 	/**
-	 * @parameter property="xcode.add.frameworks" default-value="false"
+	 * @parameter property="xcode.add.dependencies" default-value="false"
 	 * @readonly
 	 * @required
 	 */
-	public boolean addFrameworks;
+	public boolean addDependencies;
 	
 	/**
 	 * @parameter property="xcode.project.name" default-value="${project.artifactId}.xcodeproj"
@@ -113,17 +113,22 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 			throw new MojoFailureException("Could not resolve dependencies");
 		}
 
-		List<File> frameworkFiles = new ArrayList<File>();
+		List<File> dependencyFiles = new ArrayList<File>();
 		for (ArtifactResult resolvedArtifact : resolvedArtifacts) {
 			Artifact artifact = resolvedArtifact.getArtifact();
-			for(String key : artifact.getProperties().keySet()) {
-				getLog().info(key + artifact.getProperty(key, ""));
-			}
-			if (artifact.getProperty("type", "").equals("xcode-framework")) {
+			String type = artifact.getProperty("type", "");
+			if (type.equals("xcode-framework") || type.equals("xcode-library")) {
 				try {
 					// Get File from result artifact
 					File file = artifact.getFile();
-					File resultFile = new File(project.getBuild().getDirectory() + "/xcode-dependencies/frameworks/" + artifact.getGroupId() + "/" + artifact.getArtifactId());
+					String resultFileName = project.getBuild().getDirectory() + "/xcode-dependencies/";
+					if (type.equals("xcode-framework")) {
+						resultFileName += "frameworks";
+					} else if (type.equals("xcode-library")) {
+						resultFileName += "libraries";
+					}
+					resultFileName += "/" + artifact.getGroupId() + "/" + artifact.getArtifactId();
+					File resultFile = new File(resultFileName);
 					
 					if (resultFile.exists()) {
 						FileUtils.deleteDirectory(resultFile);
@@ -134,7 +139,11 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					ProcessRunner processRunner = new ProcessRunner(getLog());
 					int returnValue = processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 					
-					frameworkFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
+					if (type.equals("xcode-framework")) {
+						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
+					} else if (type.equals("xcode-library")) {
+						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));
+					}
 
 					if (returnValue != 0) {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
@@ -149,19 +158,9 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 
 			}
 		}
-		
-		if (addFrameworks) {
-			XcodeFileUtil fileUtil;
-			try {
-				fileUtil = new XcodeFileUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
-				fileUtil.addFrameworks(frameworkFiles);
-				fileUtil.writeFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+		if (addDependencies) {
+			XCodeProjectUtil projectUtil = new XCodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
+			projectUtil.addDependencies(dependencyFiles);
 		}
-
 	}
 }
