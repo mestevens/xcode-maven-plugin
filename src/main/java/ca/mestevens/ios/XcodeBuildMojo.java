@@ -39,14 +39,14 @@ public class XcodeBuildMojo extends AbstractMojo {
 	public String xcodebuild;
 	
 	/**
-	 * @parameter property="xcodeproj.path" default-value="${basedir}/${project.artifactId}.xcodeproj"
+	 * @parameter property="xcode.project.path" default-value="${basedir}/${project.artifactId}.xcodeproj"
 	 * @readonly
 	 * @required
 	 */
 	public String xcodeProject;
 	
 	/**
-	 * @parameter property="xcodeproj.scheme.name" default-value="${project.artifactId}"
+	 * @parameter property="xcode.project.scheme.name" default-value="${project.artifactId}"
 	 * @readonly
 	 * @required
 	 */
@@ -60,11 +60,11 @@ public class XcodeBuildMojo extends AbstractMojo {
 	public String targetDirectory;
 	
 	/**
-	 * @parameter property="xcode.framework.name" default-value="${project.artifactId}"
+	 * @parameter property="xcode.artifact.name" default-value="${project.artifactId}"
 	 * @readonly
 	 * @required
 	 */
-	public String frameworkName;
+	public String artifactName;
 	
 	/**
 	 * @parameter property="xcode.simulator.archs"
