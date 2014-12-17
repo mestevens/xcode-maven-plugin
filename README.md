@@ -1,7 +1,7 @@
 # xcode-maven-plugin
 
 ## Latest Version
-0.3.1
+0.3.2
 
 ## Description
 
@@ -87,3 +87,8 @@ xcodeproj.scheme.name=${project.artifactId}
 ### xcode-package-framework
 
 Zips up the build in the target directory as an `xcode-framework` or `xcode-library` and will attach it to the project for installation and deploying
+
+## Release Notes
+* 0.3.2
+	* Static library build/gather dependency support
+	* Finer control over architectures built.
