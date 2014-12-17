@@ -2,16 +2,16 @@ package ca.mestevens.ios;
 
 import java.io.File;
 import java.io.IOException;
-
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-import net.lingala.zip4j.model.ZipParameters;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
+
+import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -43,19 +43,37 @@ public class XcodePackageMojo extends AbstractMojo {
 	 */
 	public String frameworkName;
 
-	public void execute() throws MojoExecutionException, MojoFailureException {
+	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
-			ZipFile zippedFile = new ZipFile(targetDirectory + "/" + frameworkName + ".xcode-framework");
-			File frameworkArtifact = new File(targetDirectory + "/" + frameworkName + ".framework");
-			if (zippedFile.getFile().exists()) {
-				FileUtils.deleteDirectory(zippedFile.getFile());
+			ProcessRunner processRunner = new ProcessRunner(getLog());
+			String packaging = project.getPackaging();
+			String packagedFileName = frameworkName + "." + packaging;
+			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
+			List<String> inputFiles = new ArrayList<String>();
+			if (packaging.equals("xcode-framework")) {
+				inputFiles.add(frameworkName + ".framework");
+			} else {
+				inputFiles.add("lib" + frameworkName + ".a");
+				inputFiles.add("headers");
 			}
-			zippedFile.createZipFile(frameworkArtifact, new ZipParameters());
-			project.getArtifact().setFile(zippedFile.getFile());
-		} catch (ZipException e) {
-			getLog().error("Could not zip file: " + frameworkName);
-			getLog().error(e.getMessage());
-			throw new MojoFailureException("Could not zip file: " + frameworkName);
+			if (zippedFile.exists()) {
+				FileUtils.deleteDirectory(zippedFile);
+			}
+			List<String> zipCommand = new ArrayList<String>();
+			zipCommand.add("zip");
+			zipCommand.add("-r");
+			zipCommand.add(packagedFileName);
+			for(String inputFile : inputFiles) {
+				zipCommand.add(inputFile);
+			}
+			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
+
+			if (returnValue != 0) {
+				getLog().error("Could not zip file: " + frameworkName);
+				throw new MojoFailureException("Could not zip file: " + frameworkName);
+			}
+			
+			project.getArtifact().setFile(zippedFile);
 		} catch (IOException e) {
 			getLog().error("Error deleting directory");
 			getLog().error(e.getMessage());
