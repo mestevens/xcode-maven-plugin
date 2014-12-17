@@ -127,11 +127,11 @@ public class XcodeBuildMojo extends AbstractMojo {
 		
 		String libraryLocation = "";
 		if (packaging.equals("xcode-framework")) {
-			lipoCommand.add(frameworkName);
-			libraryLocation = frameworkName + ".framework/" + frameworkName;
+			lipoCommand.add(artifactName);
+			libraryLocation = artifactName + ".framework/" + artifactName;
 		} else if (packaging.equals("xcode-library")) {
-			lipoCommand.add("lib" + frameworkName + ".a");
-			libraryLocation =  "lib" + frameworkName + ".a";
+			lipoCommand.add("lib" + artifactName + ".a");
+			libraryLocation =  "lib" + artifactName + ".a";
 		}
 		for (String simulatorArch : simulatorArchs) {
 			lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + libraryLocation);
@@ -142,8 +142,8 @@ public class XcodeBuildMojo extends AbstractMojo {
 		returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 		checkReturnValue(returnValue);
 		if (packaging.equals("xcode-framework")) {
-			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + frameworkName + ".framework", ".");
-			processRunner.runProcess(targetDirectory, "cp", frameworkName, frameworkName + ".framework/.");
+			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + artifactName + ".framework", ".");
+			processRunner.runProcess(targetDirectory, "cp", artifactName, artifactName + ".framework/.");
 		} else if (packaging.equals("xcode-library")) {
 			//TODO headers?
 			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
