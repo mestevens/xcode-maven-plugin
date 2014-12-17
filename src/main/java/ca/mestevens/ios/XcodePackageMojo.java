@@ -2,6 +2,8 @@ package ca.mestevens.ios;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -44,12 +46,28 @@ public class XcodePackageMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
 			ProcessRunner processRunner = new ProcessRunner(getLog());
-			File zippedFile = new File(targetDirectory + "/" + frameworkName + ".xcode-framework");
+			String packaging = project.getPackaging();
+			String packagedFileName = frameworkName + "." + packaging;
+			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
+			List<String> inputFiles = new ArrayList<String>();
+			if (packaging.equals("xcode-framework")) {
+				inputFiles.add(frameworkName + ".framework");
+			} else {
+				inputFiles.add("lib" + frameworkName + ".a");
+				inputFiles.add("headers");
+			}
 			if (zippedFile.exists()) {
 				FileUtils.deleteDirectory(zippedFile);
 			}
-			int returnValue = processRunner.runProcess(targetDirectory, "zip", "-r", frameworkName + ".xcode-framework", frameworkName + ".framework");
-			
+			List<String> zipCommand = new ArrayList<String>();
+			zipCommand.add("zip");
+			zipCommand.add("-r");
+			zipCommand.add(packagedFileName);
+			for(String inputFile : inputFiles) {
+				zipCommand.add(inputFile);
+			}
+			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
+
 			if (returnValue != 0) {
 				getLog().error("Could not zip file: " + frameworkName);
 				throw new MojoFailureException("Could not zip file: " + frameworkName);

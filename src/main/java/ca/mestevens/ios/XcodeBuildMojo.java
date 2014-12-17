@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.project.MavenProject;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
@@ -22,6 +23,13 @@ import ca.mestevens.ios.xcode.parser.models.XCodeProject;
  * @phase compile
  */
 public class XcodeBuildMojo extends AbstractMojo {
+	
+	/**
+	 * @parameter property="project"
+	 * @readonly
+	 * @required
+	 */
+	public MavenProject project;
 	
 	/**
 	 * @parameter property="xcodebuild.path" default-value="/usr/bin/xcodebuild"
@@ -71,6 +79,7 @@ public class XcodeBuildMojo extends AbstractMojo {
 	public List<String> deviceArchs;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		String packaging = project.getPackaging();
 		ProcessRunner processRunner = new ProcessRunner(getLog());
 		if (simulatorArchs == null || simulatorArchs.size() == 0) {
 			simulatorArchs = new ArrayList<String>();
@@ -115,17 +124,30 @@ public class XcodeBuildMojo extends AbstractMojo {
 		lipoCommand.add("lipo");
 		lipoCommand.add("-create");
 		lipoCommand.add("-output");
-		lipoCommand.add(frameworkName);
+		
+		String libraryLocation = "";
+		if (packaging.equals("xcode-framework")) {
+			lipoCommand.add(frameworkName);
+			libraryLocation = frameworkName + ".framework/" + frameworkName;
+		} else if (packaging.equals("xcode-library")) {
+			lipoCommand.add("lib" + frameworkName + ".a");
+			libraryLocation =  "lib" + frameworkName + ".a";
+		}
 		for (String simulatorArch : simulatorArchs) {
-			lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + frameworkName + ".framework/" + frameworkName);
+			lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + libraryLocation);
 		}
 		for (String deviceArch : deviceArchs) {
-			lipoCommand.add("iphoneos-" + deviceArch + "/" + frameworkName + ".framework/" + frameworkName);
+			lipoCommand.add("iphoneos-" + deviceArch + "/" + libraryLocation);
 		}
 		returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 		checkReturnValue(returnValue);
-		processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + frameworkName + ".framework", ".");
-		processRunner.runProcess(targetDirectory, "cp", frameworkName, frameworkName + ".framework/.");
+		if (packaging.equals("xcode-framework")) {
+			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + frameworkName + ".framework", ".");
+			processRunner.runProcess(targetDirectory, "cp", frameworkName, frameworkName + ".framework/.");
+		} else if (packaging.equals("xcode-library")) {
+			//TODO headers?
+			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
+		}
 	}
 	
 	protected void checkReturnValue(int returnValue) throws MojoFailureException {

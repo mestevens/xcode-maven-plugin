@@ -122,13 +122,22 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 		}
 
 		List<File> frameworkFiles = new ArrayList<File>();
+		List<File> libraryFiles = new ArrayList<File>();
 		for (ArtifactResult resolvedArtifact : resolvedArtifacts) {
 			Artifact artifact = resolvedArtifact.getArtifact();
-			if (artifact.getProperty("type", "").equals("xcode-framework")) {
+			String type = artifact.getProperty("type", "");
+			if (type.equals("xcode-framework") || type.equals("xcode-library")) {
 				try {
 					// Get File from result artifact
 					File file = artifact.getFile();
-					File resultFile = new File(project.getBuild().getDirectory() + "/xcode-dependencies/frameworks/" + artifact.getGroupId() + "/" + artifact.getArtifactId());
+					String resultFileName = project.getBuild().getDirectory() + "/xcode-dependencies/";
+					if (type.equals("xcode-framework")) {
+						resultFileName += "frameworks";
+					} else if (type.equals("xcode-library")) {
+						resultFileName += "libraries";
+					}
+					resultFileName += "/" + artifact.getGroupId() + "/" + artifact.getArtifactId();
+					File resultFile = new File(resultFileName);
 					
 					if (resultFile.exists()) {
 						FileUtils.deleteDirectory(resultFile);
@@ -139,7 +148,11 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					ProcessRunner processRunner = new ProcessRunner(getLog());
 					int returnValue = processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 					
-					frameworkFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
+					if (type.equals("xcode-framework")) {
+						frameworkFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
+					} else if (type.equals("xcode-library")) {
+						libraryFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));
+					}
 
 					if (returnValue != 0) {
 						getLog().error("Could not unzip file: " + artifact.getArtifactId());
@@ -159,7 +172,6 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 				XCodeProject xcodeProject = new XCodeProject(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
 				List<CommentedIdentifier> embedPhaseIdentifiers = new ArrayList<CommentedIdentifier>();
 				List<CommentedIdentifier> fileReferenceIdentifiers = new ArrayList<CommentedIdentifier>();
-				//TODO Doesn't seem to be doing anything atm, take a look at it
 				List<CommentedIdentifier> copyIdentifiers = new ArrayList<CommentedIdentifier>();
 				//Add the framework files as file references and build files
 				for (File frameworkFile : frameworkFiles) {
