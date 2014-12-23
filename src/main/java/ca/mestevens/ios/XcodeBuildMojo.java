@@ -2,6 +2,7 @@ package ca.mestevens.ios;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -77,7 +78,13 @@ public class XcodeBuildMojo extends AbstractMojo {
 	 * @readonly
 	 */
 	public List<String> deviceArchs;
-
+	
+	/**
+	 * @parameter
+	 * @readonly
+	 */
+	public Map<String, String> buildOptions;
+	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		String packaging = project.getPackaging();
 		ProcessRunner processRunner = new ProcessRunner(getLog());
@@ -110,14 +117,43 @@ public class XcodeBuildMojo extends AbstractMojo {
 			}
 		}
 		int returnValue = 0;
+		List<String> buildCommands = new ArrayList<String>();
+		buildCommands.add(xcodebuild);
+		if (buildOptions != null) {
+			for (String key : buildOptions.keySet()) {
+				buildCommands.add("-" + key);
+				buildCommands.add(buildOptions.get(key));
+			}
+		}
+		if (!buildCommands.contains("-project")) {
+			buildCommands.add("-project");
+			buildCommands.add(xcodeProject);
+		}
+		if (!buildCommands.contains("-scheme")) {
+			buildCommands.add("-scheme");
+			buildCommands.add(xcodeScheme);
+		}
+		System.out.println(buildCommands);
 		for (String simulatorArch : simulatorArchs) {
-			returnValue = processRunner.runProcess(null, xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
-					"-sdk", "iphonesimulator", "-arch", simulatorArch, "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator-" + simulatorArch, "build");
+			List<String> simulatorBuildCommands = new ArrayList<String>(buildCommands);
+			simulatorBuildCommands.add("-sdk");
+			simulatorBuildCommands.add("iphonesimulator");
+			simulatorBuildCommands.add("-arch");
+			simulatorBuildCommands.add(simulatorArch);
+			simulatorBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator-" + simulatorArch);
+			simulatorBuildCommands.add("build");
+			returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));
 			checkReturnValue(returnValue);
 		}
 		for (String deviceArch : deviceArchs) {
-			returnValue = processRunner.runProcess(null, xcodebuild, "-project", xcodeProject, "-scheme", xcodeScheme,
-					"-sdk", "iphoneos", "-arch", deviceArch, "CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphoneos-" + deviceArch, "build");
+			List<String> deviceBuildCommands = new ArrayList<String>(buildCommands);
+			deviceBuildCommands.add("-sdk");
+			deviceBuildCommands.add("iphoneos");
+			deviceBuildCommands.add("-arch");
+			deviceBuildCommands.add(deviceArch);
+			deviceBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphoneos-" + deviceArch);
+			deviceBuildCommands.add("build");
+			returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));
 			checkReturnValue(returnValue);
 		}
 		List<String> lipoCommand = new ArrayList<String>();
@@ -145,7 +181,6 @@ public class XcodeBuildMojo extends AbstractMojo {
 			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + artifactName + ".framework", ".");
 			processRunner.runProcess(targetDirectory, "cp", artifactName, artifactName + ".framework/.");
 		} else if (packaging.equals("xcode-library")) {
-			//TODO headers?
 			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
 		}
 	}
