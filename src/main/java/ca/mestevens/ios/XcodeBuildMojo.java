@@ -8,6 +8,9 @@ import java.util.Map;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import ca.mestevens.ios.utils.ProcessRunner;
@@ -19,71 +22,56 @@ import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
- *
- * @goal xcode-build
- * 
- * @phase compile
  */
+@Mojo(name = "xcode-build", defaultPhase = LifecyclePhase.COMPILE)
 public class XcodeBuildMojo extends AbstractMojo {
 	
-	/**
-	 * @parameter property="project"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
 	
 	/**
-	 * @parameter property="xcodebuild.path" default-value="/usr/bin/xcodebuild"
-	 * @readonly
-	 * @required
+	 * The location of the xcodebuild executable. Defaults to /usr/bin/xcodebuild.
 	 */
+	@Parameter(property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", readonly = true, required = true)
 	public String xcodebuild;
 	
 	/**
-	 * @parameter property="xcode.project.path" default-value="${basedir}/${project.artifactId}.xcodeproj"
-	 * @readonly
-	 * @required
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
+	@Parameter(property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", readonly = true, required = true)
 	public String xcodeProject;
 	
 	/**
-	 * @parameter property="xcode.project.scheme.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * The name of the scheme to build. Defaults to ${project.artifactId}.
 	 */
+	@Parameter(property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
 	public String xcodeScheme;
 	
-	/**
-	 * @parameter property="project.build.directory"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project.build.directory", readonly = true, required = true)
 	public String targetDirectory;
 	
 	/**
-	 * @parameter property="xcode.artifact.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * The name of the artifact. Defaults to ${project.artifactId}
 	 */
+	@Parameter(property = "xcode.artifact.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
 	public String artifactName;
 	
 	/**
-	 * @parameter property="xcode.simulator.archs"
-	 * @readonly
+	 * The list of simulator architectures to build.
 	 */
+	@Parameter(property = "xcode.simulator.archs", readonly = true)
 	public List<String> simulatorArchs;
 	
 	/**
-	 * @parameter property="xcode.device.archs"
-	 * @readonly
+	 * The list of device architectures to build.
 	 */
+	@Parameter(property = "xcode.device.archs", readonly = true)
 	public List<String> deviceArchs;
 	
 	/**
-	 * @parameter
-	 * @readonly
+	 * A map of build options to add.
 	 */
+	@Parameter(readonly = true)
 	public Map<String, String> buildOptions;
 	
 	public ProcessRunner processRunner;

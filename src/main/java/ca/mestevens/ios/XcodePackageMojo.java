@@ -8,6 +8,9 @@ import java.util.List;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -15,32 +18,20 @@ import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
- *
- * @goal xcode-package-framework
- * 
- * @phase package
  */
+@Mojo(name = "xcode-package-framework", defaultPhase = LifecyclePhase.PACKAGE)
 public class XcodePackageMojo extends AbstractMojo {
 	
-	/**
-	 * @parameter property="project"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
 	
-	/**
-	 * @parameter property="project.build.directory"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project.build.directory", readonly = true, required = true)
 	public String targetDirectory;
 	
 	/**
-	 * @parameter property="xcode.framework.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * The name of the framework/artifact
 	 */
+	@Parameter(property = "xcode.framework.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
 	public String frameworkName;
 	
 	public ProcessRunner processRunner;
