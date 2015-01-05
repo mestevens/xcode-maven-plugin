@@ -1,5 +1,6 @@
 package ca.mestevens.ios;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -85,9 +86,14 @@ public class XcodeBuildMojo extends AbstractMojo {
 	 */
 	public Map<String, String> buildOptions;
 	
+	public ProcessRunner processRunner;
+	
+	public XcodeBuildMojo() {
+		this.processRunner = new ProcessRunner(getLog());
+	}
+	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		String packaging = project.getPackaging();
-		ProcessRunner processRunner = new ProcessRunner(getLog());
 		if (simulatorArchs == null || simulatorArchs.size() == 0) {
 			simulatorArchs = new ArrayList<String>();
 			simulatorArchs.add("i386");
@@ -95,21 +101,24 @@ public class XcodeBuildMojo extends AbstractMojo {
 		}
 		if (deviceArchs == null || deviceArchs.size() == 0) {
 			deviceArchs = new ArrayList<String>();
-			try {
-				XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
-				XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
-				for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
-					XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
-					if (buildConfiguration != null) {
-						List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
-						if (archs != null) {
-							deviceArchs = archs;
-							break;
+			File pbxprojFile = new File(xcodeProject + "/project.pbxproj");
+			if (pbxprojFile.exists()) {
+				try {
+					XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
+					XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
+					for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
+						XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
+						if (buildConfiguration != null) {
+							List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
+							if (archs != null) {
+								deviceArchs = archs;
+								break;
+							}
 						}
 					}
+				} catch (InvalidObjectFormatException e) {
+					throw new MojoExecutionException(e.getMessage());
 				}
-			} catch (InvalidObjectFormatException e) {
-				throw new MojoExecutionException(e.getMessage());
 			}
 			if (deviceArchs == null || deviceArchs.size() == 0) {
 				deviceArchs.add("armv7");
@@ -133,7 +142,6 @@ public class XcodeBuildMojo extends AbstractMojo {
 			buildCommands.add("-scheme");
 			buildCommands.add(xcodeScheme);
 		}
-		System.out.println(buildCommands);
 		for (String simulatorArch : simulatorArchs) {
 			List<String> simulatorBuildCommands = new ArrayList<String>(buildCommands);
 			simulatorBuildCommands.add("-sdk");
@@ -175,6 +183,7 @@ public class XcodeBuildMojo extends AbstractMojo {
 		for (String deviceArch : deviceArchs) {
 			lipoCommand.add("iphoneos-" + deviceArch + "/" + libraryLocation);
 		}
+
 		returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 		checkReturnValue(returnValue);
 		if (packaging.equals("xcode-framework")) {

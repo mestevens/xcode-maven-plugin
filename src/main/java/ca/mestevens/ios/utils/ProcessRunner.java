@@ -10,10 +10,17 @@ import org.apache.maven.plugin.logging.Log;
 
 public class ProcessRunner {
 
-	private Log log;
+	public Log log;
+	public boolean expectZeros;
 
 	public ProcessRunner(Log log) {
 		this.log = log;
+		this.expectZeros = true;
+	}
+	
+	public ProcessRunner(Log log, boolean expectZeros) {
+		this.log = log;
+		this.expectZeros = expectZeros;
 	}
 
 	public int runProcess(String workingDirectory, String... strings) throws MojoFailureException {
@@ -30,7 +37,11 @@ public class ProcessRunner {
 			while ((line = input.readLine()) != null) {
 				log.info(line);
 			}
-			return process.waitFor();
+			int executionValue = process.waitFor();
+			if (expectZeros && executionValue != 0) {
+				throw new MojoFailureException(String.format("Process %s returned %d.", processBuilder.command(), executionValue));
+			}
+			return executionValue;
 		} catch (IOException e) {
 			log.error(e.getMessage());
 			throw new MojoFailureException(e.getMessage());

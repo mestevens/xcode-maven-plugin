@@ -20,7 +20,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import ca.mestevens.ios.utils.ProcessRunner;
-import ca.mestevens.ios.utils.XCodeProjectUtil;
+import ca.mestevens.ios.utils.XcodeProjectUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -159,7 +159,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 			}
 		}
 		if (addDependencies) {
-			XCodeProjectUtil projectUtil = new XCodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
+			XcodeProjectUtil projectUtil = new XcodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
 			projectUtil.addDependencies(dependencyFiles);
 		}
 	}

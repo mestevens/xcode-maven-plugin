@@ -42,10 +42,15 @@ public class XcodePackageMojo extends AbstractMojo {
 	 * @required
 	 */
 	public String frameworkName;
+	
+	public ProcessRunner processRunner;
+	
+	public XcodePackageMojo() {
+		this.processRunner = new ProcessRunner(getLog());
+	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
-			ProcessRunner processRunner = new ProcessRunner(getLog());
 			String packaging = project.getPackaging();
 			String packagedFileName = frameworkName + "." + packaging;
 			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
