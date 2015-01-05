@@ -1,6 +1,7 @@
 package ca.mestevens.ios.utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import lombok.Data;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
 import ca.mestevens.ios.xcode.parser.models.CommentedIdentifier;
 import ca.mestevens.ios.xcode.parser.models.PBXBuildFile;
 import ca.mestevens.ios.xcode.parser.models.PBXBuildPhase;
@@ -22,14 +24,15 @@ import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 public class XcodeProjectUtil {
 	
 	private String pbxProjLocation;
+	private XCodeProject xcodeProject;
 	
-	public XcodeProjectUtil(String pbxProjLocation) {
+	public XcodeProjectUtil(String pbxProjLocation) throws InvalidObjectFormatException {
 		this.pbxProjLocation = pbxProjLocation;
+		this.xcodeProject = new XCodeProject(pbxProjLocation);
 	}
 
 	public void addDependencies(List<File> dependencyFiles) throws MojoExecutionException {
 		try {
-			XCodeProject xcodeProject = new XCodeProject(pbxProjLocation);
 			List<CommentedIdentifier> frameworkIdentifiers = new ArrayList<CommentedIdentifier>();
 			List<CommentedIdentifier> fileReferenceIdentifiers = new ArrayList<CommentedIdentifier>();
 			List<CommentedIdentifier> copyIdentifiers = new ArrayList<CommentedIdentifier>();
@@ -203,12 +206,14 @@ public class XcodeProjectUtil {
 					frameworkGroup.addChild(fileReference);
 				}
 			}
-			//Write out the updated xcode project
-			Files.write(Paths.get(pbxProjLocation), xcodeProject.toString().getBytes());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new MojoExecutionException(ex.getMessage());
 		}
+	}
+	
+	public void writeProject() throws IOException {
+		Files.write(Paths.get(pbxProjLocation), xcodeProject.toString().getBytes());
 	}
 	
 }

@@ -146,8 +146,13 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 			}
 		}
 		if (addDependencies) {
-			XcodeProjectUtil projectUtil = new XcodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
-			projectUtil.addDependencies(dependencyFiles);
+			try {
+				XcodeProjectUtil projectUtil = new XcodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
+				projectUtil.addDependencies(dependencyFiles);
+				projectUtil.writeProject();
+			} catch (Exception ex) {
+				throw new MojoFailureException(ex.getMessage());
+			}
 		}
 	}
 }
