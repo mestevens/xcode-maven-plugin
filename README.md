@@ -1,7 +1,7 @@
 # xcode-maven-plugin
 
 ## Latest Version
-0.3.3
+0.4.0
 
 ## Description
 
@@ -29,6 +29,19 @@ In addition, if your project is an ios-app, you need to add the following tag
 So that the framework-dependencies goal will be bound to your lifecycle by default.
 
 ## Goals
+
+### set-keychain
+
+This goal will set your keychain to the specified keychain (see the properties) so that the build will use that keychain.
+
+#### Properties
+
+* security.path
+	* A string that points to the location of your `security` command. Defaults to `/usr/bin/security`
+* keychain.path
+	* A string that points to the keychain that you want to use. This is `required` for this goal to work
+* keychain.password
+	* A string that contains the password to the keychain you want to use. This is `required` for this goal to work. You should make sure to put an encrypted password here, using [this guide](http://maven.apache.org/guides/mini/guide-encryption.html).
 
 ### framework-dependencies
 
