@@ -47,6 +47,7 @@
 						<id>default</id>
 						<phases>
 							<initialize>
+								ca.mestevens.ios:xcode-maven-plugin:set-keychain,
 								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
 							</initialize>
 							<compile>
@@ -88,6 +89,7 @@
 						<id>default</id>
 						<phases>
 							<initialize>
+								ca.mestevens.ios:xcode-maven-plugin:set-keychain,
 								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
 							</initialize>
 							<compile>
