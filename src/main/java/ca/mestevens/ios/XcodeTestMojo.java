@@ -1,14 +1,13 @@
 package ca.mestevens.ios;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+
+import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -66,47 +65,37 @@ public class XcodeTestMojo extends AbstractMojo {
 	 */
 	public List<String> testSimulators;
 	
+	public ProcessRunner processRunner;
+	
+	public XcodeTestMojo() {
+		this.processRunner = new ProcessRunner(getLog(), false);
+	}
+	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (skipTests) {
 			return;
 		}
-		try {
-			List<String> command = new ArrayList<String>();
-			command.add(xcodebuild);
-			command.add("-project");
-			command.add(xcodeProject);
-			command.add("-scheme");
-			command.add(xcodeScheme);
-			if (testSimulators == null) {
-				testSimulators = new ArrayList<String>();
-			}
-			if (testSimulators.isEmpty()) {
-				testSimulators.add("iPhone 6");
-			}
-			for (String simulator : testSimulators) {
-				command.add("-destination");
-				command.add("platform=iOS Simulator,name=" + simulator + "");
-			}
-			command.add("test");
-			
-			ProcessBuilder processBuilder = new ProcessBuilder(command);
-			processBuilder.redirectErrorStream(true);
-			Process process = processBuilder.start();
-			BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			String line = null;
-			while ((line = input.readLine()) != null) {
-				getLog().info(line);
-			}
-			int processCode = process.waitFor();
-			if (processCode != 0 && !ignoreFailures) {
-				throw new MojoFailureException("There were test failures.");
-			}
-		} catch (IOException e) {
-			getLog().error(e.getMessage());
-			throw new MojoFailureException(e.getMessage());
-		} catch (InterruptedException e) {
-			getLog().error(e.getMessage());
-			throw new MojoFailureException(e.getMessage());
+		List<String> command = new ArrayList<String>();
+		command.add(xcodebuild);
+		command.add("-project");
+		command.add(xcodeProject);
+		command.add("-scheme");
+		command.add(xcodeScheme);
+		if (testSimulators == null) {
+			testSimulators = new ArrayList<String>();
+		}
+		if (testSimulators.isEmpty()) {
+			testSimulators.add("iPhone 6");
+		}
+		for (String simulator : testSimulators) {
+			command.add("-destination");
+			command.add("platform=iOS Simulator,name=" + simulator + "");
+		}
+		command.add("test");
+		
+		int resultCode = processRunner.runProcess(null, command.toArray(new String[command.size()]));
+		if (resultCode != 0 && !ignoreFailures) {
+			throw new MojoFailureException("There were test failures.");
 		}
 	}
 	

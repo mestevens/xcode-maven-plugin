@@ -19,11 +19,11 @@ import ca.mestevens.ios.xcode.parser.models.XCConfigurationList;
 import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
 @Data
-public class XCodeProjectUtil {
+public class XcodeProjectUtil {
 	
 	private String pbxProjLocation;
 	
-	public XCodeProjectUtil(String pbxProjLocation) {
+	public XcodeProjectUtil(String pbxProjLocation) {
 		this.pbxProjLocation = pbxProjLocation;
 	}
 

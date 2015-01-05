@@ -3,7 +3,7 @@
 
 	<groupId>ca.mestevens.ios</groupId>
 	<artifactId>xcode-maven-plugin</artifactId>
-	<version>0.3.3</version>
+	<version>0.4.0</version>
 	<packaging>maven-plugin</packaging>
 	<name>xcode-maven-plugin</name>
 	<description>A maven plugin to facilitate xcode building/dependency management/testing</description>
@@ -70,6 +70,18 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-plugin-plugin</artifactId>
 				<version>3.2</version>
+				<configuration>
+                    <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>mojo-descriptor</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>descriptor</goal>
+                        </goals>
+                    </execution>
+                </executions>
 			</plugin>
 			<plugin>
 				<groupId>com.atlassian.maven.plugins</groupId>
@@ -91,6 +103,7 @@
 				<version>2.17</version>
 				<configuration>
 					<groups>automated</groups>
+					<argLine>${surefireArgLine}</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -128,6 +141,95 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			
+			<plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.7.0.201403182114</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>com/ea/tnt/pn/rest/model/*.class</exclude>
+                                <exclude>com/ea/tnt/pn//guice/*.class</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>default-prepare-agent-integration</id>
+                                <goals>
+                                    <goal>prepare-agent-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${project.build.directory}/coverage-reports/jacoco-it.exec</destFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>default-report-integration</id>
+                                <goals>
+                                    <goal>report-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/coverage-reports/jacoco-it.exec</dataFile>
+                                    <outputDirectory>${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>pre-unit-test</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+                                    <propertyName>surefireArgLine</propertyName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>post-unit-test</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+                                    <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+                                </configuration>
+                            </execution>
+
+                            <execution>
+                                <id>merge</id>
+                                <goals>
+                                    <goal>merge</goal>
+                                </goals>
+                                <phase>post-integration-test</phase>
+                                <configuration>
+                                    <fileSets>
+                                        <fileSet>
+                                            <directory>${project.build.directory}/coverage-reports/</directory>
+                                            <includes>
+                                                <include>*.exec</include>
+                                            </includes>
+                                        </fileSet>
+                                    </fileSets>
+                                    <destFile>${project.build.directory}/coverage-reports/jacoco-merged.exec</destFile>
+                                </configuration>
+                            </execution>
+
+                            <execution>
+                                <id>merged-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <phase>post-integration-test</phase>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/coverage-reports/jacoco-merged.exec</dataFile>
+                                    <outputDirectory>${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+                    </plugin>
+			
+			
 		</plugins>
 	</build>
 
@@ -136,6 +238,11 @@
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
 			<version>3.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.plugin-tools</groupId>
+			<artifactId>maven-plugin-annotations</artifactId>
+			<version>3.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -169,6 +276,12 @@
 			<groupId>ca.mestevens.ios</groupId>
 			<artifactId>xcode-project-parser</artifactId>
 			<version>0.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.17</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	
