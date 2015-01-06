@@ -29,7 +29,7 @@ public class XcodePackageMojoTest {
 	private Log mockLog;
 	private ProcessRunner mockProcessRunner;
 	private final String targetDirectory = "target";
-	private final String frameworkName = "test-name";
+	private final String artifactName = "test-name";
 	private XcodePackageMojo packageMojo;
 
 	@BeforeMethod
@@ -42,7 +42,7 @@ public class XcodePackageMojoTest {
 		packageMojo.processRunner = mockProcessRunner;
 		packageMojo.project = mockProject;
 		packageMojo.targetDirectory = targetDirectory;
-		packageMojo.frameworkName = frameworkName;
+		packageMojo.artifactName = artifactName;
 	}
 	
 	@AfterMethod
@@ -59,15 +59,15 @@ public class XcodePackageMojoTest {
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(frameworkName + ".xcode-framework");
-		zipCommand.add(frameworkName + ".framework");
+		zipCommand.add(artifactName + ".xcode-framework");
+		zipCommand.add(artifactName + ".framework");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(0);
 		Artifact mockArtifact = mock(Artifact.class);
 		when(mockProject.getArtifact()).thenReturn(mockArtifact);
 		
 		packageMojo.execute();
 		verify(mockProcessRunner, times(1)).runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
-		verify(mockArtifact, times(1)).setFile(new File(targetDirectory + "/" + frameworkName + ".xcode-framework"));
+		verify(mockArtifact, times(1)).setFile(new File(targetDirectory + "/" + artifactName + ".xcode-framework"));
 	}
 	
 	@Test(expectedExceptions = MojoFailureException.class)
@@ -76,8 +76,8 @@ public class XcodePackageMojoTest {
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(frameworkName + ".xcode-framework");
-		zipCommand.add(frameworkName + ".framework");
+		zipCommand.add(artifactName + ".xcode-framework");
+		zipCommand.add(artifactName + ".framework");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(1);
 		
 		packageMojo.execute();
@@ -89,12 +89,12 @@ public class XcodePackageMojoTest {
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(frameworkName + ".xcode-framework");
-		zipCommand.add(frameworkName + ".framework");
+		zipCommand.add(artifactName + ".xcode-framework");
+		zipCommand.add(artifactName + ".framework");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(0);
 		Artifact mockArtifact = mock(Artifact.class);
 		when(mockProject.getArtifact()).thenReturn(mockArtifact);
-		File zippedFile = new File(targetDirectory + "/" + frameworkName + ".xcode-framework");
+		File zippedFile = new File(targetDirectory + "/" + artifactName + ".xcode-framework");
 		zippedFile.mkdir();
 		assertTrue(zippedFile.exists());
 		
@@ -110,8 +110,8 @@ public class XcodePackageMojoTest {
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(frameworkName + ".xcode-library");
-		zipCommand.add("lib" + frameworkName + ".a");
+		zipCommand.add(artifactName + ".xcode-library");
+		zipCommand.add("lib" + artifactName + ".a");
 		zipCommand.add("headers");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(0);
 		Artifact mockArtifact = mock(Artifact.class);
@@ -119,7 +119,7 @@ public class XcodePackageMojoTest {
 		
 		packageMojo.execute();
 		verify(mockProcessRunner, times(1)).runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
-		verify(mockArtifact, times(1)).setFile(new File(targetDirectory + "/" + frameworkName + ".xcode-library"));
+		verify(mockArtifact, times(1)).setFile(new File(targetDirectory + "/" + artifactName + ".xcode-library"));
 	}
 	
 }

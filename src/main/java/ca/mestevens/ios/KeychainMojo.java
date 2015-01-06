@@ -12,13 +12,13 @@ import ca.mestevens.ios.utils.ProcessRunner;
 @Mojo(name = "set-keychain", defaultPhase = LifecyclePhase.INITIALIZE)
 public class KeychainMojo extends AbstractMojo {
 
-	@Parameter(property = "security.path", defaultValue = "/usr/bin/security", readonly = true, required = true)
+	@Parameter(alias = "securityPath", property = "security.path", defaultValue = "/usr/bin/security", readonly = true, required = true)
 	public String security;
 	
-	@Parameter(alias = "keychain.path", property = "keychain.path", readonly = true, required = false)
+	@Parameter(alias = "keychainPath", property = "keychain.path", readonly = true, required = false)
 	public String keychain;
 	
-	@Parameter(alias = "keychain.password", property = "keychain.password", readonly = true, required = false)
+	@Parameter(alias = "keychainPassword", property = "keychain.password", readonly = true, required = false)
 	public String keychainPassword;
 	
 	public ProcessRunner processRunner;
@@ -29,7 +29,15 @@ public class KeychainMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		if (keychain == null || keychain.isEmpty() || keychainPassword == null || keychainPassword.isEmpty()) {
+		//If a keychain path and password aren't specified, try and get them from the environment
+		if (keychain == null || keychain.isEmpty()) {
+			keychain = System.getenv("KEYCHAIN_PATH");
+		}
+		if (keychainPassword == null || keychainPassword.isEmpty()) {
+			keychainPassword = System.getenv("KEYCHAIN_PASSWORD");
+		}
+		//We only need to check nulls here, because the empty cases are caught above.
+		if (keychain == null || keychainPassword == null) {
 			return;
 		}
 		getLog().info(String.format("%s list-keychains -s %s", security, keychain));

@@ -32,19 +32,19 @@ public class XcodeBuildMojo extends AbstractMojo {
 	/**
 	 * The location of the xcodebuild executable. Defaults to /usr/bin/xcodebuild.
 	 */
-	@Parameter(property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", readonly = true, required = true)
+	@Parameter(alias = "xcodebuildPath", property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", readonly = true, required = true)
 	public String xcodebuild;
 	
 	/**
 	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
-	@Parameter(property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectPath", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", readonly = true, required = true)
 	public String xcodeProject;
 	
 	/**
 	 * The name of the scheme to build. Defaults to ${project.artifactId}.
 	 */
-	@Parameter(property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectScheme", property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
 	public String xcodeScheme;
 	
 	@Parameter(property = "project.build.directory", readonly = true, required = true)
@@ -53,19 +53,19 @@ public class XcodeBuildMojo extends AbstractMojo {
 	/**
 	 * The name of the artifact. Defaults to ${project.artifactId}
 	 */
-	@Parameter(property = "xcode.artifact.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectArtifactName", property = "xcode.artifact.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
 	public String artifactName;
 	
 	/**
 	 * The list of simulator architectures to build.
 	 */
-	@Parameter(property = "xcode.simulator.archs", readonly = true)
+	@Parameter(readonly = true)
 	public List<String> simulatorArchs;
 	
 	/**
 	 * The list of device architectures to build.
 	 */
-	@Parameter(property = "xcode.device.archs", readonly = true)
+	@Parameter(readonly = true)
 	public List<String> deviceArchs;
 	
 	/**

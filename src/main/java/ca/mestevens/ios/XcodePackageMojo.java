@@ -29,10 +29,10 @@ public class XcodePackageMojo extends AbstractMojo {
 	public String targetDirectory;
 	
 	/**
-	 * The name of the framework/artifact
+	 * The name of the artifact. Defaults to ${project.artifactId}
 	 */
-	@Parameter(property = "xcode.framework.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
-	public String frameworkName;
+	@Parameter(alias = "xcodeProjectArtifactName", property = "xcode.artifact.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
+	public String artifactName;
 	
 	public ProcessRunner processRunner;
 	
@@ -43,13 +43,13 @@ public class XcodePackageMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
 			String packaging = project.getPackaging();
-			String packagedFileName = frameworkName + "." + packaging;
+			String packagedFileName = artifactName + "." + packaging;
 			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
 			List<String> inputFiles = new ArrayList<String>();
 			if (packaging.equals("xcode-framework")) {
-				inputFiles.add(frameworkName + ".framework");
+				inputFiles.add(artifactName + ".framework");
 			} else {
-				inputFiles.add("lib" + frameworkName + ".a");
+				inputFiles.add("lib" + artifactName + ".a");
 				inputFiles.add("headers");
 			}
 			if (zippedFile.exists()) {
@@ -65,8 +65,8 @@ public class XcodePackageMojo extends AbstractMojo {
 			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
 
 			if (returnValue != 0) {
-				getLog().error("Could not zip file: " + frameworkName);
-				throw new MojoFailureException("Could not zip file: " + frameworkName);
+				getLog().error("Could not zip file: " + artifactName);
+				throw new MojoFailureException("Could not zip file: " + artifactName);
 			}
 			
 			project.getArtifact().setFile(zippedFile);
