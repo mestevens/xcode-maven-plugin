@@ -17,7 +17,7 @@ import org.codehaus.plexus.util.FileUtils;
 import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
- * Goal which generates your framework dependencies in the target directory.
+ * Goal to package the artifact(s).
  */
 @Mojo(name = "xcode-package-framework", defaultPhase = LifecyclePhase.PACKAGE)
 public class XcodePackageMojo extends AbstractMojo {

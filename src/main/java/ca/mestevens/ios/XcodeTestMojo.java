@@ -13,7 +13,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
- * Goal which generates your framework dependencies in the target directory.
+ * Goal to test your artifact(s).
  */
 @Mojo(name = "xcode-test", defaultPhase = LifecyclePhase.TEST)
 public class XcodeTestMojo extends AbstractMojo {

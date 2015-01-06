@@ -9,6 +9,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 
+/**
+ * Goal to set your keychain if needed.
+ */
 @Mojo(name = "set-keychain", defaultPhase = LifecyclePhase.INITIALIZE)
 public class KeychainMojo extends AbstractMojo {
 

@@ -21,7 +21,7 @@ import ca.mestevens.ios.xcode.parser.models.XCConfigurationList;
 import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
 /**
- * Goal which generates your framework dependencies in the target directory.
+ * Goal to build your artifact.
  */
 @Mojo(name = "xcode-build", defaultPhase = LifecyclePhase.COMPILE)
 public class XcodeBuildMojo extends AbstractMojo {
