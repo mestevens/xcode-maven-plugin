@@ -28,80 +28,14 @@ In addition, if your project is an ios-app, you need to add the following tag
 ```
 So that the framework-dependencies goal will be bound to your lifecycle by default.
 
-## Goals
+## Documentation
 
-### set-keychain
-
-This goal will set your keychain to the specified keychain (see the properties) so that the build will use that keychain.
-
-#### Properties
-
-* security.path
-	* A string that points to the location of your `security` command. Defaults to `/usr/bin/security`
-* keychain.path
-	* A string that points to the keychain that you want to use. This is `required` for this goal to work
-* keychain.password
-	* A string that contains the password to the keychain you want to use. This is `required` for this goal to work. You should make sure to put an encrypted password here, using [this guide](http://maven.apache.org/guides/mini/guide-encryption.html).
-
-### framework-dependencies
-
-Will grab xcode-framework/xcode-library artifacts from your maven repository and extract them in the target directory. Frameworks will be under `target/xcode-dependencies/frameworks` and libraries (and their headers) will be under `target/xcode-dependencies/libraries`.
-
-#### Properties
-
-* xcode.project.name
-	* A string representing your xcode project name. Default value is: `${project.artifactId}.xcodeproj`
-* xcode.add.dependencies
-	* A boolean value that will allow try to automatically link your dependencies into your xcodeproj file. Default value is `false`
-
-### xcode-build
-
-Will run an xcode archive build on your xcode project and place the resulting framework in your target directory. The plugin will try and create a universal build for you based off of the architectures in your xcode project.  The command that will be run (for each architecture specified) is:
-
-```
-${xcodebuild.path} -project ${xcodeproj.path} -scheme ${xcodeproj.scheme.name} -destination generic/platform=iOS CONFIGURATION_BUILD_DIR=${project.build.directory} archive
-```
-
-#### Properties
-* xcode.simulator.archs
-	* A list of architectures to build for the simulator in the universal build. Possible values are `i386` and `x86_64`, which is what the property defaults to if not specified in your maven properties. So to build for strictly 32bit you would have the following property:
-	
-		```
-		<xcode.simulator.archs>
-			<arch>i386</arch>
-		</xcode.simulator.archs>
-		```
-* xcode.device.archs
-	* A list of architectures to build for devices in the universal build. If this property isn't specified the plugin will look into your xcodeproject to get the values there. If you're just using the standard architecture set (aka, the xcodeproj/project.pbxproj doesn't contain any information about architectures), this value will default to `armv7` and `arm64`.
-* xcode.artifact.name
-	* The name of your artifact you want to build. Defaults to `${project.artifactId}`.
-* project.build.directory
-	* The location of your build directory. Defaults to `target`
-* xcode.project.scheme.name
-	* The name of the scheme to build. Defaults to `${project.artifactId}`.
-* xcode.project.path
-	* The path to your xcodeproj file. Defaults to `${basedir}/${project.artifactId}.xcodeproj`
-* xcodebuild.path
-	* The path to the `xcodebuild` command. Defaults to `/usr/bin/xcodebuild`
-
-### xcode-test
-
-Will run xcode tests on the iphone simulator. The command that will be run is:
-
-```
-${xcodebuild.path} -project ${xcodeproj.path} -scheme ${xcodeproj.scheme.name} -sdk iphonesimulator test
-```
-
-Parameters default to:
-xcodebuild.path=/usr/bin/xcodebuild
-xcodeproj.path=${basedir}/${project.artifactId}.xcodeproj
-xcodeproj.scheme.name=${project.artifactId}
-
-### xcode-package-framework
-
-Zips up the build in the target directory as an `xcode-framework` or `xcode-library` and will attach it to the project for installation and deploying
+Documentation (although sparse at the moment) can be found [here](http://mestevens.github.io/xcode-maven-plugin/).
 
 ## Release Notes
+* 0.4.0
+	* More tested code!
+	* Added a new goal to set your keychain credentials if you need to.
 * 0.3.2
 	* Static library build/gather dependency support
 	* Finer control over architectures built.
