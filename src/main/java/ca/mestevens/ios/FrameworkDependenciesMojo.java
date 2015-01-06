@@ -41,19 +41,19 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	public MavenProject project;
 
 	@Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
-    protected List<RemoteRepository> projectRepos;
+    public List<RemoteRepository> projectRepos;
 
 	/**
 	 * The entry point to Aether, i.e. the component doing all the work.
 	 */
 	@Component
-	protected RepositorySystem repoSystem;
+	public RepositorySystem repoSystem;
 
 	/**
 	 * The current repository/network configuration of Maven.
 	 */
 	@Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
-	protected RepositorySystemSession repoSession;
+	public RepositorySystemSession repoSession;
 	
 	/**
 	 * The property to determine whether or not to add the dependencies to the xcodeproj/project.pbxproj file. Defaults to false.
@@ -66,12 +66,17 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "xcode.project.name", defaultValue = "${project.artifactId}.xcodeproj", readonly = true, required = true)
 	public String xcodeProjectName;
+	
+	public ProcessRunner processRunner;
+	
+	public FrameworkDependenciesMojo() {
+		this.processRunner = new ProcessRunner(getLog());
+	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
 		
 		CollectRequest collectRequest = new CollectRequest();
-		System.out.println(project.getArtifact().getId());
 		final Artifact mainArtifact = new DefaultArtifact(project.getArtifact().getId());
 		collectRequest.setRoot(new Dependency(mainArtifact, JavaScopes.COMPILE));
 		collectRequest.setRepositories(projectRepos);
@@ -123,18 +128,12 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					
 					FileUtils.mkdir(resultFile.getAbsolutePath());
 					
-					ProcessRunner processRunner = new ProcessRunner(getLog());
-					int returnValue = processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
+					processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 					
 					if (type.equals("xcode-framework")) {
 						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
 					} else if (type.equals("xcode-library")) {
 						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));
-					}
-
-					if (returnValue != 0) {
-						getLog().error("Could not unzip file: " + artifact.getArtifactId());
-						throw new MojoFailureException("Could not unzip file: " + artifact.getArtifactId());
 					}
 					
 				} catch (IOException e) {
