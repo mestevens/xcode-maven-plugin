@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XcodePackageMojo.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">xcode-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">ca.mestevens.ios</a> &gt; <span class="el_source">XcodePackageMojo.java</span></div><h1>XcodePackageMojo.java</h1><pre class="source lang-java linenums">package ca.mestevens.ios;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
+
+import ca.mestevens.ios.utils.ProcessRunner;
+
+/**
+ * Goal to package the artifact(s).
+ */
+@Mojo(name = &quot;xcode-package-framework&quot;, defaultPhase = LifecyclePhase.PACKAGE)
+public class XcodePackageMojo extends AbstractMojo {
+	
+	@Parameter(property = &quot;project&quot;, readonly = true, required = true)
+	public MavenProject project;
+	
+	@Parameter(property = &quot;project.build.directory&quot;, readonly = true, required = true)
+	public String targetDirectory;
+	
+	/**
+	 * The name of the artifact. Defaults to ${project.artifactId}
+	 */
+	@Parameter(alias = &quot;xcodeProjectArtifactName&quot;, property = &quot;xcode.artifact.name&quot;, defaultValue = &quot;${project.artifactId}&quot;, required = true)
+	public String artifactName;
+	
+	public ProcessRunner processRunner;
+	
+<span class="fc" id="L39">	public XcodePackageMojo() {</span>
+<span class="fc" id="L40">		this.processRunner = new ProcessRunner(getLog());</span>
+<span class="fc" id="L41">	}</span>
+
+	public void execute() throws MojoExecutionException, MojoFailureException {		
+		try {
+<span class="fc" id="L45">			String packaging = project.getPackaging();</span>
+<span class="fc" id="L46">			String packagedFileName = artifactName + &quot;.&quot; + packaging;</span>
+<span class="fc" id="L47">			File zippedFile = new File(targetDirectory + &quot;/&quot; + packagedFileName);</span>
+<span class="fc" id="L48">			List&lt;String&gt; inputFiles = new ArrayList&lt;String&gt;();</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">			if (packaging.equals(&quot;xcode-framework&quot;)) {</span>
+<span class="fc" id="L50">				inputFiles.add(artifactName + &quot;.framework&quot;);</span>
+			} else {
+<span class="fc" id="L52">				inputFiles.add(&quot;lib&quot; + artifactName + &quot;.a&quot;);</span>
+<span class="fc" id="L53">				inputFiles.add(&quot;headers&quot;);</span>
+			}
+<span class="fc bfc" id="L55" title="All 2 branches covered.">			if (zippedFile.exists()) {</span>
+<span class="fc" id="L56">				FileUtils.deleteDirectory(zippedFile);</span>
+			}
+<span class="fc" id="L58">			List&lt;String&gt; zipCommand = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L59">			zipCommand.add(&quot;zip&quot;);</span>
+<span class="fc" id="L60">			zipCommand.add(&quot;-r&quot;);</span>
+<span class="fc" id="L61">			zipCommand.add(packagedFileName);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">			for(String inputFile : inputFiles) {</span>
+<span class="fc" id="L63">				zipCommand.add(inputFile);</span>
+<span class="fc" id="L64">			}</span>
+<span class="fc" id="L65">			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">			if (returnValue != 0) {</span>
+<span class="fc" id="L68">				getLog().error(&quot;Could not zip file: &quot; + artifactName);</span>
+<span class="fc" id="L69">				throw new MojoFailureException(&quot;Could not zip file: &quot; + artifactName);</span>
+			}
+			
+<span class="fc" id="L72">			project.getArtifact().setFile(zippedFile);</span>
+<span class="nc" id="L73">		} catch (IOException e) {</span>
+<span class="nc" id="L74">			getLog().error(&quot;Error deleting directory&quot;);</span>
+<span class="nc" id="L75">			getLog().error(e.getMessage());</span>
+<span class="nc" id="L76">			throw new MojoFailureException(&quot;Error deleting directory&quot;);</span>
+<span class="fc" id="L77">		}</span>
+<span class="fc" id="L78">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>

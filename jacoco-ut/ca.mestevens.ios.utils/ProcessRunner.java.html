@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ProcessRunner.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">xcode-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">ca.mestevens.ios.utils</a> &gt; <span class="el_source">ProcessRunner.java</span></div><h1>ProcessRunner.java</h1><pre class="source lang-java linenums">package ca.mestevens.ios.utils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
+
+public class ProcessRunner {
+
+	public Log log;
+	public boolean expectZeros;
+
+<span class="fc" id="L16">	public ProcessRunner(Log log) {</span>
+<span class="fc" id="L17">		this.log = log;</span>
+<span class="fc" id="L18">		this.expectZeros = true;</span>
+<span class="fc" id="L19">	}</span>
+	
+<span class="fc" id="L21">	public ProcessRunner(Log log, boolean expectZeros) {</span>
+<span class="fc" id="L22">		this.log = log;</span>
+<span class="fc" id="L23">		this.expectZeros = expectZeros;</span>
+<span class="fc" id="L24">	}</span>
+
+	public int runProcess(String workingDirectory, String... strings) throws MojoFailureException {
+		try {
+<span class="fc" id="L28">			ProcessBuilder processBuilder = new ProcessBuilder(strings);</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">			if (workingDirectory != null) {</span>
+<span class="fc" id="L30">				processBuilder.directory(new File(workingDirectory));</span>
+			}
+<span class="fc" id="L32">			processBuilder.redirectErrorStream(true);</span>
+<span class="fc" id="L33">			Process process = processBuilder.start();</span>
+<span class="fc" id="L34">			BufferedReader input = new BufferedReader(new InputStreamReader(</span>
+					process.getInputStream()));
+<span class="fc" id="L36">			String line = null;</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">			while ((line = input.readLine()) != null) {</span>
+<span class="fc" id="L38">				log.info(line);</span>
+			}
+<span class="fc" id="L40">			int executionValue = process.waitFor();</span>
+<span class="fc bfc" id="L41" title="All 4 branches covered.">			if (expectZeros &amp;&amp; executionValue != 0) {</span>
+<span class="fc" id="L42">				throw new MojoFailureException(String.format(&quot;Process %s returned %d.&quot;, processBuilder.command(), executionValue));</span>
+			}
+<span class="fc" id="L44">			return executionValue;</span>
+<span class="nc" id="L45">		} catch (IOException e) {</span>
+<span class="nc" id="L46">			log.error(e.getMessage());</span>
+<span class="nc" id="L47">			throw new MojoFailureException(e.getMessage());</span>
+<span class="nc" id="L48">		} catch (InterruptedException e) {</span>
+<span class="nc" id="L49">			log.error(e.getMessage());</span>
+<span class="nc" id="L50">			throw new MojoFailureException(e.getMessage());</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>

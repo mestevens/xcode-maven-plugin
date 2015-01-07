@@ -40,7 +40,7 @@
                 
                     
                   <li id="publishDate">Last Published: 2015-01-07</li>
-                  <li class="divider">|</li> <li id="projectVersion">Version: 0.4.1-SNAPSHOT</li>
+                  <li class="divider">|</li> <li id="projectVersion">Version: 0.5.0-SNAPSHOT</li>
                       
                 
                     
@@ -124,7 +124,7 @@
       
 <p><b>Full name</b>:</p>
       
-<p>ca.mestevens.ios:xcode-maven-plugin:0.4.1-SNAPSHOT:framework-dependencies</p>
+<p>ca.mestevens.ios:xcode-maven-plugin:0.5.0-SNAPSHOT:framework-dependencies</p>
       
 <p><b>Description</b>:</p>
       
@@ -170,14 +170,14 @@ the xcodeproj/project.pbxproj file. Defaults to false.<br /><b>Default value is<
           
 <tr class="a">
             
-<td><b><a href="#xcodeProjectName">xcodeProjectName</a></b></td>
+<td><b><a href="#xcodeProject">xcodeProject</a></b></td>
             
 <td><tt>String</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>The name of the xcodeproj file. Defaults to
-${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${project.artifactId}.xcodeproj</tt>.<br /><b>User property is</b>: <tt>xcode.project.name</tt>.</td>
+<td>The path to your xcodeproj file. Defaults to
+${basedir}/${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${basedir}/${project.artifactId}.xcodeproj</tt>.<br /><b>User property is</b>: <tt>xcode.project.path</tt>.</td>
           </tr>
         </table>
       </div>
@@ -200,10 +200,10 @@ the xcodeproj/project.pbxproj file. Defaults to false.</div>
           
 <li><b>Default</b>: <tt>false</tt></li>
         </ul><hr />
-<p><b><a name="xcodeProjectName">xcodeProjectName</a>:</b></p>
+<p><b><a name="xcodeProject">xcodeProject</a>:</b></p>
         
-<div>The name of the xcodeproj file. Defaults to
-${project.artifactId}.xcodeproj.</div>
+<div>The path to your xcodeproj file. Defaults to
+${basedir}/${project.artifactId}.xcodeproj.</div>
         
 <ul>
           
@@ -211,9 +211,9 @@ ${project.artifactId}.xcodeproj.</div>
           
 <li><b>Required</b>: <tt>Yes</tt></li>
           
-<li><b>User Property</b>: <tt>xcode.project.name</tt></li>
+<li><b>User Property</b>: <tt>xcode.project.path</tt></li>
           
-<li><b>Default</b>: <tt>${project.artifactId}.xcodeproj</tt></li>
+<li><b>Default</b>: <tt>${basedir}/${project.artifactId}.xcodeproj</tt></li>
         </ul>
       </div>
     </div>

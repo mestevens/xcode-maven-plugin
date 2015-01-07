@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FrameworkDependenciesMojo.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">xcode-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">ca.mestevens.ios</a> &gt; <span class="el_source">FrameworkDependenciesMojo.java</span></div><h1>FrameworkDependenciesMojo.java</h1><pre class="source lang-java linenums">package ca.mestevens.ios;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.artifact.JavaScopes;
+
+import ca.mestevens.ios.utils.ProcessRunner;
+import ca.mestevens.ios.utils.XcodeProjectUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Goal which generates your framework dependencies in the target directory.
+ */
+@Mojo(name = &quot;framework-dependencies&quot;, defaultPhase = LifecyclePhase.INITIALIZE)
+public class FrameworkDependenciesMojo extends AbstractMojo {
+
+	@Parameter(property = &quot;project&quot;, readonly = true, required = true)
+	public MavenProject project;
+
+	@Parameter(defaultValue = &quot;${project.remoteProjectRepositories}&quot;, readonly = true, required = true)
+    public List&lt;RemoteRepository&gt; projectRepos;
+
+	/**
+	 * The entry point to Aether, i.e. the component doing all the work.
+	 */
+	@Component
+	public RepositorySystem repoSystem;
+
+	/**
+	 * The current repository/network configuration of Maven.
+	 */
+	@Parameter(defaultValue = &quot;${repositorySystemSession}&quot;, readonly = true)
+	public RepositorySystemSession repoSession;
+	
+	/**
+	 * The property to determine whether or not to add the dependencies to the xcodeproj/project.pbxproj file. Defaults to false.
+	 */
+	@Parameter(alias = &quot;xcodeProjectAddDependencies&quot;, property = &quot;xcode.add.dependencies&quot;, defaultValue = &quot;false&quot;, required = true)
+	public boolean addDependencies;
+	
+	/**
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
+	 */
+	@Parameter(alias = &quot;project&quot;, property = &quot;xcode.project.path&quot;, defaultValue = &quot;${basedir}/${project.artifactId}.xcodeproj&quot;, required = true)
+	public String xcodeProject;
+	
+	public ProcessRunner processRunner;
+	
+<span class="fc" id="L72">	public FrameworkDependenciesMojo() {</span>
+<span class="fc" id="L73">		this.processRunner = new ProcessRunner(getLog());</span>
+<span class="fc" id="L74">	}</span>
+
+	public void execute() throws MojoExecutionException, MojoFailureException {
+<span class="fc" id="L77">		getLog().info(&quot;Starting execution&quot;);</span>
+		
+<span class="fc" id="L79">		CollectRequest collectRequest = new CollectRequest();</span>
+<span class="fc" id="L80">		final Artifact mainArtifact = new DefaultArtifact(project.getArtifact().getId());</span>
+<span class="fc" id="L81">		collectRequest.setRoot(new Dependency(mainArtifact, JavaScopes.COMPILE));</span>
+<span class="fc" id="L82">		collectRequest.setRepositories(projectRepos);</span>
+<span class="fc" id="L83">		DependencyRequest dependencyRequest = new DependencyRequest().setCollectRequest(collectRequest);</span>
+<span class="fc" id="L84">		dependencyRequest.setFilter(new DependencyFilter() {</span>
+
+			public boolean accept(DependencyNode node,
+					List&lt;DependencyNode&gt; parents) {
+<span class="nc" id="L88">				Artifact nodeArtifact = node.getArtifact();</span>
+				
+<span class="nc bnc" id="L90" title="All 4 branches missed.">				if (nodeArtifact.getGroupId().equals(mainArtifact.getGroupId()) &amp;&amp;</span>
+						nodeArtifact.getArtifactId().equals(mainArtifact.getArtifactId())) {
+<span class="nc" id="L92">					return false;</span>
+				}
+<span class="nc" id="L94">				return true;</span>
+			}
+			
+		});
+		List&lt;ArtifactResult&gt; resolvedArtifacts;
+		try {
+			
+<span class="fc" id="L101">			resolvedArtifacts = repoSystem.resolveDependencies(repoSession, dependencyRequest).getArtifactResults();</span>
+<span class="fc" id="L102">		} catch (DependencyResolutionException e) {</span>
+<span class="fc" id="L103">			getLog().error(&quot;Could not resolve dependencies&quot;);</span>
+<span class="fc" id="L104">			getLog().error(e.getMessage());</span>
+<span class="fc" id="L105">			throw new MojoFailureException(&quot;Could not resolve dependencies&quot;);</span>
+<span class="fc" id="L106">		}</span>
+
+<span class="fc" id="L108">		List&lt;File&gt; dependencyFiles = new ArrayList&lt;File&gt;();</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">		for (ArtifactResult resolvedArtifact : resolvedArtifacts) {</span>
+<span class="fc" id="L110">			Artifact artifact = resolvedArtifact.getArtifact();</span>
+<span class="fc" id="L111">			String type = artifact.getProperty(&quot;type&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L112" title="1 of 4 branches missed.">			if (type.equals(&quot;xcode-framework&quot;) || type.equals(&quot;xcode-library&quot;)) {</span>
+				try {
+					// Get File from result artifact
+<span class="fc" id="L115">					File file = artifact.getFile();</span>
+<span class="fc" id="L116">					String resultFileName = project.getBuild().getDirectory() + &quot;/xcode-dependencies/&quot;;</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">					if (type.equals(&quot;xcode-framework&quot;)) {</span>
+<span class="fc" id="L118">						resultFileName += &quot;frameworks&quot;;</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">					} else if (type.equals(&quot;xcode-library&quot;)) {</span>
+<span class="fc" id="L120">						resultFileName += &quot;libraries&quot;;</span>
+					}
+<span class="fc" id="L122">					resultFileName += &quot;/&quot; + artifact.getGroupId() + &quot;/&quot; + artifact.getArtifactId();</span>
+<span class="fc" id="L123">					File resultFile = new File(resultFileName);</span>
+					
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">					if (resultFile.exists()) {</span>
+<span class="nc" id="L126">						FileUtils.deleteDirectory(resultFile);</span>
+					}
+					
+<span class="fc" id="L129">					FileUtils.mkdir(resultFile.getAbsolutePath());</span>
+					
+<span class="fc" id="L131">					processRunner.runProcess(null, &quot;unzip&quot;, file.getAbsolutePath(), &quot;-d&quot;, resultFile.getAbsolutePath());</span>
+					
+<span class="fc bfc" id="L133" title="All 2 branches covered.">					if (type.equals(&quot;xcode-framework&quot;)) {</span>
+<span class="fc" id="L134">						dependencyFiles.add(new File(resultFile.getAbsolutePath() + &quot;/&quot; + artifact.getArtifactId() + &quot;.framework&quot;));</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">					} else if (type.equals(&quot;xcode-library&quot;)) {</span>
+<span class="fc" id="L136">						dependencyFiles.add(new File(resultFile.getAbsolutePath() + &quot;/lib&quot; + artifact.getArtifactId() + &quot;.a&quot;));</span>
+					}
+					
+<span class="nc" id="L139">				} catch (IOException e) {</span>
+<span class="nc" id="L140">					getLog().error(&quot;Problem creating/deleting framework file: &quot; + artifact.getArtifactId());</span>
+<span class="nc" id="L141">					getLog().error(e.getMessage());</span>
+<span class="nc" id="L142">					throw new MojoFailureException(&quot;Problem creating/deleting framework file: &quot; + artifact.getArtifactId());</span>
+<span class="fc" id="L143">				}</span>
+
+			}
+<span class="fc" id="L146">		}</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		if (addDependencies) {</span>
+			try {
+<span class="nc" id="L149">				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + &quot;/project.pbxproj&quot;);</span>
+<span class="nc" id="L150">				projectUtil.addDependencies(dependencyFiles);</span>
+<span class="nc" id="L151">				projectUtil.writeProject();</span>
+<span class="nc" id="L152">			} catch (Exception ex) {</span>
+<span class="nc" id="L153">				throw new MojoFailureException(ex.getMessage());</span>
+<span class="nc" id="L154">			}</span>
+		}
+<span class="fc" id="L156">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>

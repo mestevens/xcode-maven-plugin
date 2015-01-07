@@ -40,7 +40,7 @@
                 
                     
                   <li id="publishDate">Last Published: 2015-01-07</li>
-                  <li class="divider">|</li> <li id="projectVersion">Version: 0.4.1-SNAPSHOT</li>
+                  <li class="divider">|</li> <li id="projectVersion">Version: 0.5.0-SNAPSHOT</li>
                       
                 
                     
@@ -124,7 +124,7 @@
       
 <p><b>Full name</b>:</p>
       
-<p>ca.mestevens.ios:xcode-maven-plugin:0.4.1-SNAPSHOT:xcode-build</p>
+<p>ca.mestevens.ios:xcode-maven-plugin:0.5.0-SNAPSHOT:xcode-build</p>
       
 <p><b>Description</b>:</p>
       
@@ -186,7 +186,7 @@ ${basedir}/${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${
             
 <td><tt>-</tt></td>
             
-<td>The name of the scheme to build. Defaults to ${project.artifactId}.<br /><b>Default value is</b>: <tt>${project.artifactId}</tt>.<br /><b>User property is</b>: <tt>xcode.project.scheme.name</tt>.</td>
+<td>The name of the scheme to build. Defaults to ${project.artifactId}.<br /><b>Default value is</b>: <tt>${project.artifactId}</tt>.<br /><b>User property is</b>: <tt>xcode.project.scheme</tt>.</td>
           </tr>
           
 <tr class="a">
@@ -221,13 +221,13 @@ ${basedir}/${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${
           
 <tr class="b">
             
-<td><b><a href="#buildOptions">buildOptions</a></b></td>
+<td><b><a href="#buildSettings">buildSettings</a></b></td>
             
 <td><tt>Map</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>A map of build options to add.<br /></td>
+<td>A map of build settings to add.<br /></td>
           </tr>
           
 <tr class="a">
@@ -251,6 +251,121 @@ ${basedir}/${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${
             
 <td>The list of simulator architectures to build.<br /></td>
           </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#userDefaults">userDefaults</a></b></td>
+            
+<td><tt>Map</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>A map of user defaults to add.<br /></td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#xcodeAllTargets">xcodeAllTargets</a></b></td>
+            
+<td><tt>boolean</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Build all the targets in the specified project.<br /><b>User property is</b>: <tt>xcode.project.all.targets</tt>.</td>
+          </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#xcodeConfigurationName">xcodeConfigurationName</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Use the specified build configuration when building each target.<br /><b>User property is</b>: <tt>xcode.project.configuration.name</tt>.</td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#xcodeDerivedDataPath">xcodeDerivedDataPath</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Overrides the folder that should be used for derived data when
+performing a build action on a scheme in a workspace.<br /><b>User property is</b>: <tt>xcode.project.derived.data.path</tt>.</td>
+          </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#xcodeDestinationTimeout">xcodeDestinationTimeout</a></b></td>
+            
+<td><tt>Integer</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Use the specified timeout when searching for a destination device.
+The default is 30 seconds.<br /><b>User property is</b>: <tt>xcode.project.destination.timeout</tt>.</td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#xcodeResultBundlePath">xcodeResultBundlePath</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Writes a bundle to the specified path with results from performing
+a build action on a scheme in a workspace.<br /><b>User property is</b>: <tt>xcode.project.result.bundle.path</tt>.</td>
+          </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#xcodeSkipUnavailableActions">xcodeSkipUnavailableActions</a></b></td>
+            
+<td><tt>boolean</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Skip build actions that cannot be performed instead of failing.<br /><b>Default value is</b>: <tt>false</tt>.<br /><b>User property is</b>: <tt>xcode.project.skip.unavailable.actions</tt>.</td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#xcodeTarget">xcodeTarget</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Builds the specified target.<br /><b>User property is</b>: <tt>xcode.project.target</tt>.</td>
+          </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#xcodeWorkspace">xcodeWorkspace</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Build the specified workspace.<br /><b>User property is</b>: <tt>xcode.project.workspace</tt>.</td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#xcodeXcconfig">xcodeXcconfig</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>Load the build settings defined in the specified file when building
+all targets. These settings will over-ride all other settings,
+including settings passed individually on the command line.<br /><b>User property is</b>: <tt>xcode.project.xcconfig.file.name</tt>.</td>
+          </tr>
         </table>
       </div>
       
@@ -271,9 +386,9 @@ ${basedir}/${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${
           
 <li><b>Default</b>: <tt>${project.artifactId}</tt></li>
         </ul><hr />
-<p><b><a name="buildOptions">buildOptions</a>:</b></p>
+<p><b><a name="buildSettings">buildSettings</a>:</b></p>
         
-<div>A map of build options to add.</div>
+<div>A map of build settings to add.</div>
         
 <ul>
           
@@ -301,6 +416,66 @@ ${basedir}/${project.artifactId}.xcodeproj.<br /><b>Default value is</b>: <tt>${
           
 <li><b>Required</b>: <tt>No</tt></li>
         </ul><hr />
+<p><b><a name="userDefaults">userDefaults</a>:</b></p>
+        
+<div>A map of user defaults to add.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.util.Map</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeAllTargets">xcodeAllTargets</a>:</b></p>
+        
+<div>Build all the targets in the specified project.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>boolean</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.all.targets</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeConfigurationName">xcodeConfigurationName</a>:</b></p>
+        
+<div>Use the specified build configuration when building each target.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.configuration.name</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeDerivedDataPath">xcodeDerivedDataPath</a>:</b></p>
+        
+<div>Overrides the folder that should be used for derived data when
+performing a build action on a scheme in a workspace.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.derived.data.path</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeDestinationTimeout">xcodeDestinationTimeout</a>:</b></p>
+        
+<div>Use the specified timeout when searching for a destination device.
+The default is 30 seconds.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.Integer</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.destination.timeout</tt></li>
+        </ul><hr />
 <p><b><a name="xcodeProject">xcodeProject</a>:</b></p>
         
 <div>The path to your xcodeproj file. Defaults to
@@ -316,6 +491,19 @@ ${basedir}/${project.artifactId}.xcodeproj.</div>
           
 <li><b>Default</b>: <tt>${basedir}/${project.artifactId}.xcodeproj</tt></li>
         </ul><hr />
+<p><b><a name="xcodeResultBundlePath">xcodeResultBundlePath</a>:</b></p>
+        
+<div>Writes a bundle to the specified path with results from performing
+a build action on a scheme in a workspace.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.result.bundle.path</tt></li>
+        </ul><hr />
 <p><b><a name="xcodeScheme">xcodeScheme</a>:</b></p>
         
 <div>The name of the scheme to build. Defaults to ${project.artifactId}.</div>
@@ -326,9 +514,61 @@ ${basedir}/${project.artifactId}.xcodeproj.</div>
           
 <li><b>Required</b>: <tt>Yes</tt></li>
           
-<li><b>User Property</b>: <tt>xcode.project.scheme.name</tt></li>
+<li><b>User Property</b>: <tt>xcode.project.scheme</tt></li>
           
 <li><b>Default</b>: <tt>${project.artifactId}</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeSkipUnavailableActions">xcodeSkipUnavailableActions</a>:</b></p>
+        
+<div>Skip build actions that cannot be performed instead of failing.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>boolean</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.skip.unavailable.actions</tt></li>
+          
+<li><b>Default</b>: <tt>false</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeTarget">xcodeTarget</a>:</b></p>
+        
+<div>Builds the specified target.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.target</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeWorkspace">xcodeWorkspace</a>:</b></p>
+        
+<div>Build the specified workspace.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.workspace</tt></li>
+        </ul><hr />
+<p><b><a name="xcodeXcconfig">xcodeXcconfig</a>:</b></p>
+        
+<div>Load the build settings defined in the specified file when building
+all targets. These settings will over-ride all other settings,
+including settings passed individually on the command line.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.xcconfig.file.name</tt></li>
         </ul><hr />
 <p><b><a name="xcodebuild">xcodebuild</a>:</b></p>
         
