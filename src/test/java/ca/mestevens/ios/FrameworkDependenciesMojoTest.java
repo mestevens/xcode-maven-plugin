@@ -52,7 +52,7 @@ public class FrameworkDependenciesMojoTest {
 		mockProcessRunner.log = mockLog;
 		dependenciesMojo = new FrameworkDependenciesMojo();
 		dependenciesMojo.processRunner = mockProcessRunner;
-		dependenciesMojo.xcodeProjectName = xcodeProjectName;
+		dependenciesMojo.xcodeProject = xcodeProjectName;
 		dependenciesMojo.addDependencies = addDependencies;
 		dependenciesMojo.repoSession = mockRepoSession;
 		dependenciesMojo.repoSystem = mockRepoSystem;
