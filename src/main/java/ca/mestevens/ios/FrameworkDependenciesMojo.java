@@ -3,6 +3,10 @@ package ca.mestevens.ios;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.aether.RepositorySystem;
@@ -29,57 +33,45 @@ import java.util.List;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
- *
- * @goal framework-dependencies
- * 
- * @phase initialize
  */
+@Mojo(name = "framework-dependencies", defaultPhase = LifecyclePhase.INITIALIZE)
 public class FrameworkDependenciesMojo extends AbstractMojo {
 
-	/**
-	 * @parameter property="project"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
 
-	/**
-	 * The project's remote repositories to use for the resolution of project
-	 * dependencies.
-	 * 
-	 * @parameter default-value="${project.remoteProjectRepositories}"
-	 * @readonly
-	 */
-	protected List<RemoteRepository> projectRepos;
+	@Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
+    public List<RemoteRepository> projectRepos;
 
 	/**
 	 * The entry point to Aether, i.e. the component doing all the work.
-	 * 
-	 * @component
 	 */
-	protected RepositorySystem repoSystem;
+	@Component
+	public RepositorySystem repoSystem;
 
 	/**
 	 * The current repository/network configuration of Maven.
-	 * 
-	 * @parameter default-value="${repositorySystemSession}"
-	 * @readonly
 	 */
-	protected RepositorySystemSession repoSession;
+	@Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
+	public RepositorySystemSession repoSession;
 	
 	/**
-	 * @parameter property="xcode.add.dependencies" default-value="false"
-	 * @readonly
-	 * @required
+	 * The property to determine whether or not to add the dependencies to the xcodeproj/project.pbxproj file. Defaults to false.
 	 */
+	@Parameter(alias = "xcodeProjectAddDependencies", property = "xcode.add.dependencies", defaultValue = "false", required = true)
 	public boolean addDependencies;
 	
 	/**
-	 * @parameter property="xcode.project.name" default-value="${project.artifactId}.xcodeproj"
-	 * @readonly
-	 * @required
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
-	public String xcodeProjectName;
+	@Parameter(alias = "project", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
+	public String xcodeProject;
+	
+	public ProcessRunner processRunner;
+	
+	public FrameworkDependenciesMojo() {
+		this.processRunner = new ProcessRunner(getLog());
+	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
@@ -136,18 +128,12 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 					
 					FileUtils.mkdir(resultFile.getAbsolutePath());
 					
-					ProcessRunner processRunner = new ProcessRunner(getLog());
-					int returnValue = processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
+					processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 					
 					if (type.equals("xcode-framework")) {
 						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
 					} else if (type.equals("xcode-library")) {
 						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));
-					}
-
-					if (returnValue != 0) {
-						getLog().error("Could not unzip file: " + artifact.getArtifactId());
-						throw new MojoFailureException("Could not unzip file: " + artifact.getArtifactId());
 					}
 					
 				} catch (IOException e) {
@@ -159,8 +145,13 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 			}
 		}
 		if (addDependencies) {
-			XcodeProjectUtil projectUtil = new XcodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
-			projectUtil.addDependencies(dependencyFiles);
+			try {
+				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
+				projectUtil.addDependencies(dependencyFiles);
+				projectUtil.writeProject();
+			} catch (Exception ex) {
+				throw new MojoFailureException(ex.getMessage());
+			}
 		}
 	}
 }

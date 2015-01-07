@@ -8,40 +8,31 @@ import java.util.List;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
- * Goal which generates your framework dependencies in the target directory.
- *
- * @goal xcode-package-framework
- * 
- * @phase package
+ * Goal to package the artifact(s).
  */
+@Mojo(name = "xcode-package-framework", defaultPhase = LifecyclePhase.PACKAGE)
 public class XcodePackageMojo extends AbstractMojo {
 	
-	/**
-	 * @parameter property="project"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
 	
-	/**
-	 * @parameter property="project.build.directory"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project.build.directory", readonly = true, required = true)
 	public String targetDirectory;
 	
 	/**
-	 * @parameter property="xcode.framework.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * The name of the artifact. Defaults to ${project.artifactId}
 	 */
-	public String frameworkName;
+	@Parameter(alias = "xcodeProjectArtifactName", property = "xcode.artifact.name", defaultValue = "${project.artifactId}", required = true)
+	public String artifactName;
 	
 	public ProcessRunner processRunner;
 	
@@ -52,13 +43,13 @@ public class XcodePackageMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
 			String packaging = project.getPackaging();
-			String packagedFileName = frameworkName + "." + packaging;
+			String packagedFileName = artifactName + "." + packaging;
 			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
 			List<String> inputFiles = new ArrayList<String>();
 			if (packaging.equals("xcode-framework")) {
-				inputFiles.add(frameworkName + ".framework");
+				inputFiles.add(artifactName + ".framework");
 			} else {
-				inputFiles.add("lib" + frameworkName + ".a");
+				inputFiles.add("lib" + artifactName + ".a");
 				inputFiles.add("headers");
 			}
 			if (zippedFile.exists()) {
@@ -74,8 +65,8 @@ public class XcodePackageMojo extends AbstractMojo {
 			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
 
 			if (returnValue != 0) {
-				getLog().error("Could not zip file: " + frameworkName);
-				throw new MojoFailureException("Could not zip file: " + frameworkName);
+				getLog().error("Could not zip file: " + artifactName);
+				throw new MojoFailureException("Could not zip file: " + artifactName);
 			}
 			
 			project.getArtifact().setFile(zippedFile);

@@ -6,63 +6,52 @@ import java.util.List;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 
 /**
- * Goal which generates your framework dependencies in the target directory.
- *
- * @goal xcode-test
- * 
- * @phase test
+ * Goal to test your artifact(s).
  */
+@Mojo(name = "xcode-test", defaultPhase = LifecyclePhase.TEST)
 public class XcodeTestMojo extends AbstractMojo {
 
 	/**
-	 * @parameter property="xcodebuild.path" default-value="/usr/bin/xcodebuild"
-	 * @readonly
-	 * @required
+	 * The location of the xcodebuild executable. Defaults to /usr/bin/xcodebuild.
 	 */
+	@Parameter(alias = "xcodebuildPath", property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", required = true)
 	public String xcodebuild;
 	
 	/**
-	 * @parameter property="xcodeproj.path" default-value="${basedir}/${project.artifactId}.xcodeproj"
-	 * @readonly
-	 * @required
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
+	@Parameter(alias = "project", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
 	public String xcodeProject;
 	
 	/**
-	 * @parameter property="xcodeproj.scheme.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * The name of the scheme to build. Defaults to ${project.artifactId}.
 	 */
+	@Parameter(alias = "xcodeProjectScheme", property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", required = true)
 	public String xcodeScheme;
 	
-	/**
-	 * @parameter property="project.build.directory"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project.build.directory", readonly = true, required = true)
 	public String targetDirectory;
 	
 	/**
-	 * @parameter property="skipTests" default-value="false"
-	 * @readonly
-	 * @required
+	 * Specifies whether or not to skip tests. Default value is false.
 	 */
+	@Parameter(alias = "skipTests", property = "skipTests", defaultValue = "false", required = true)
 	public boolean skipTests;
 	
 	/**
-	 * @parameter property="xcode.ignore.test.failures" default-value="false"
-	 * @readonly
-	 * @required
+	 * Specifies whether or not to ignore test failures. Default value is false (it won't ignore failures).
 	 */
+	@Parameter(alias = "ignoreTestFailures", property = "xcode.ignore.test.failures", defaultValue = "false", required = true)
 	public boolean ignoreFailures;
 	
-	/**
-	 * @parameter
-	 */
+	@Parameter
 	public List<String> testSimulators;
 	
 	public ProcessRunner processRunner;

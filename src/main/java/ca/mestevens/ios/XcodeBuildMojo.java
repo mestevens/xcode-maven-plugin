@@ -8,6 +8,9 @@ import java.util.Map;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import ca.mestevens.ios.utils.ProcessRunner;
@@ -18,73 +21,118 @@ import ca.mestevens.ios.xcode.parser.models.XCConfigurationList;
 import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
 /**
- * Goal which generates your framework dependencies in the target directory.
- *
- * @goal xcode-build
- * 
- * @phase compile
+ * Goal to build your artifact.
  */
+@Mojo(name = "xcode-build", defaultPhase = LifecyclePhase.COMPILE)
 public class XcodeBuildMojo extends AbstractMojo {
 	
-	/**
-	 * @parameter property="project"
-	 * @readonly
-	 * @required
-	 */
+	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
 	
 	/**
-	 * @parameter property="xcodebuild.path" default-value="/usr/bin/xcodebuild"
-	 * @readonly
-	 * @required
+	 * The location of the xcodebuild executable. Defaults to /usr/bin/xcodebuild.
 	 */
+	@Parameter(alias = "xcodebuildPath", property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", required = true)
 	public String xcodebuild;
 	
 	/**
-	 * @parameter property="xcode.project.path" default-value="${basedir}/${project.artifactId}.xcodeproj"
-	 * @readonly
-	 * @required
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
+	@Parameter(alias = "project", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
 	public String xcodeProject;
 	
 	/**
-	 * @parameter property="xcode.project.scheme.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * Builds the specified target.
 	 */
+	@Parameter(alias = "target", property = "xcode.project.target", required = false)
+	public String xcodeTarget;
+	
+	/**
+	 * Build all the targets in the specified project.
+	 */
+	@Parameter(alias = "allTargets", property = "xcode.project.all.targets", required = false)
+	public boolean xcodeAllTargets;
+	
+	/**
+	 * Build the specified workspace.
+	 */
+	@Parameter(alias = "workspace", property = "xcode.project.workspace", required = false)
+	public String xcodeWorkspace;
+	
+	/**
+	 * The name of the scheme to build. Defaults to ${project.artifactId}.
+	 */
+	@Parameter(alias = "scheme", property = "xcode.project.scheme", defaultValue = "${project.artifactId}", required = true)
 	public String xcodeScheme;
 	
 	/**
-	 * @parameter property="project.build.directory"
-	 * @readonly
-	 * @required
+	 * Use the specified timeout when searching for a destination device. The default is 30 seconds.
 	 */
+	@Parameter(alias = "destinationTimeout", property = "xcode.project.destination.timeout", required = false)
+	public Integer xcodeDestinationTimeout;
+	
+	/**
+	 * Use the specified build configuration when building each target.
+	 */
+	@Parameter(alias = "configuration", property = "xcode.project.configuration.name", required = false)
+	public String xcodeConfigurationName;
+	
+	/**
+	 * Overrides the folder that should be used for derived data when performing a build action on a scheme in a workspace.
+	 */
+	@Parameter(alias = "derivedDataPath", property = "xcode.project.derived.data.path", required = false)
+	public String xcodeDerivedDataPath;
+	
+	/**
+	 * Writes a bundle to the specified path with results from performing a build action on a scheme in a workspace.
+	 */
+	@Parameter(alias = "resultBundlePath", property = "xcode.project.result.bundle.path", required = false)
+	public String xcodeResultBundlePath;
+	
+	/**
+	 * Load the build settings defined in the specified file when building all targets. These settings will over-ride all other settings, including settings passed individually on the command line.
+	 */
+	@Parameter(alias = "xcconfig", property = "xcode.project.xcconfig.file.name", required = false)
+	public String xcodeXcconfig;
+	
+	/**
+	 * Skip build actions that cannot be performed instead of failing.
+	 */
+	@Parameter(alias = "skipUnavailableActions", property = "xcode.project.skip.unavailable.actions", defaultValue = "false", required = false)
+	public boolean xcodeSkipUnavailableActions;
+	
+	@Parameter(property = "project.build.directory", readonly = true, required = true)
 	public String targetDirectory;
 	
 	/**
-	 * @parameter property="xcode.artifact.name" default-value="${project.artifactId}"
-	 * @readonly
-	 * @required
+	 * The name of the artifact. Defaults to ${project.artifactId}
 	 */
+	@Parameter(alias = "xcodeProjectArtifactName", property = "xcode.artifact.name", defaultValue = "${project.artifactId}", required = true)
 	public String artifactName;
 	
 	/**
-	 * @parameter property="xcode.simulator.archs"
-	 * @readonly
+	 * The list of simulator architectures to build.
 	 */
+	@Parameter
 	public List<String> simulatorArchs;
 	
 	/**
-	 * @parameter property="xcode.device.archs"
-	 * @readonly
+	 * The list of device architectures to build.
 	 */
+	@Parameter
 	public List<String> deviceArchs;
 	
 	/**
-	 * @parameter
-	 * @readonly
+	 * A map of build settings to add.
 	 */
-	public Map<String, String> buildOptions;
+	@Parameter
+	public Map<String, String> buildSettings;
+	
+	/**
+	 * A map of user defaults to add.
+	 */
+	@Parameter
+	public Map<String, String> userDefaults;
 	
 	public ProcessRunner processRunner;
 	
@@ -126,22 +174,7 @@ public class XcodeBuildMojo extends AbstractMojo {
 			}
 		}
 		int returnValue = 0;
-		List<String> buildCommands = new ArrayList<String>();
-		buildCommands.add(xcodebuild);
-		if (buildOptions != null) {
-			for (String key : buildOptions.keySet()) {
-				buildCommands.add("-" + key);
-				buildCommands.add(buildOptions.get(key));
-			}
-		}
-		if (!buildCommands.contains("-project")) {
-			buildCommands.add("-project");
-			buildCommands.add(xcodeProject);
-		}
-		if (!buildCommands.contains("-scheme")) {
-			buildCommands.add("-scheme");
-			buildCommands.add(xcodeScheme);
-		}
+		List<String> buildCommands = createCommonBuildCommands();
 		for (String simulatorArch : simulatorArchs) {
 			List<String> simulatorBuildCommands = new ArrayList<String>(buildCommands);
 			simulatorBuildCommands.add("-sdk");
@@ -198,6 +231,60 @@ public class XcodeBuildMojo extends AbstractMojo {
 		if (returnValue != 0) {
 			throw new MojoFailureException("Failed to build project.");
 		}
+	}
+	
+	protected List<String> createCommonBuildCommands() {
+		List<String> buildCommands = new ArrayList<String>();
+		buildCommands.add(xcodebuild);
+		buildCommands.add("-project");
+		buildCommands.add(xcodeProject);
+		buildCommands.add("-scheme");
+		buildCommands.add(xcodeScheme);
+		if (xcodeTarget != null && !xcodeTarget.isEmpty()) {
+			buildCommands.add("-target");
+			buildCommands.add(xcodeTarget);
+		}
+		if (xcodeAllTargets) {
+			buildCommands.add("-alltargets");
+		}
+		if (xcodeWorkspace != null && !xcodeWorkspace.isEmpty()) {
+			buildCommands.add("-workspace");
+			buildCommands.add(xcodeWorkspace);
+		}
+		if (xcodeDestinationTimeout != null && xcodeDestinationTimeout > 0) {
+			buildCommands.add("-destination-timeout");
+			buildCommands.add(xcodeDestinationTimeout.toString());
+		}
+		if (xcodeConfigurationName != null && !xcodeConfigurationName.isEmpty()) {
+			buildCommands.add("-configuration");
+			buildCommands.add(xcodeConfigurationName);
+		}
+		if (xcodeDerivedDataPath != null && !xcodeDerivedDataPath.isEmpty()) {
+			buildCommands.add("-derivedDataPath");
+			buildCommands.add(xcodeDerivedDataPath);
+		}
+		if (xcodeResultBundlePath != null && !xcodeResultBundlePath.isEmpty()) {
+			buildCommands.add("-resultBundlePath");
+			buildCommands.add(xcodeResultBundlePath);
+		}
+		if (xcodeXcconfig != null && !xcodeXcconfig.isEmpty()) {
+			buildCommands.add("-xcconfig");
+			buildCommands.add(xcodeXcconfig);
+		}
+		if (xcodeSkipUnavailableActions) {
+			buildCommands.add("-skipUnavailableActions");
+		}
+		if (buildSettings != null) {
+			for (String key : buildSettings.keySet()) {
+				buildCommands.add(key + "=" + buildSettings.get(key));
+			}
+		}
+		if (userDefaults != null) {
+			for (String key : userDefaults.keySet()) {
+				buildCommands.add("-" + key + "=" + userDefaults.get(key));
+			}
+		}
+		return buildCommands;
 	}
 
 }
