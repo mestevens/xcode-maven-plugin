@@ -27,7 +27,7 @@ public class XcodeTestMojo extends AbstractMojo {
 	/**
 	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
-	@Parameter(alias = "xcodeProjectPath", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
+	@Parameter(alias = "project", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
 	public String xcodeProject;
 	
 	/**

@@ -62,10 +62,10 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	public boolean addDependencies;
 	
 	/**
-	 * The name of the xcodeproj file. Defaults to ${project.artifactId}.xcodeproj.
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
-	@Parameter(alias = "xcodeProjectName", property = "xcode.project.name", defaultValue = "${project.artifactId}.xcodeproj", required = true)
-	public String xcodeProjectName;
+	@Parameter(alias = "project", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
+	public String xcodeProject;
 	
 	public ProcessRunner processRunner;
 	
@@ -146,7 +146,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 		}
 		if (addDependencies) {
 			try {
-				XcodeProjectUtil projectUtil = new XcodeProjectUtil(project.getBasedir().getAbsolutePath() + "/" + xcodeProjectName + "/project.pbxproj");
+				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
 				projectUtil.addDependencies(dependencyFiles);
 				projectUtil.writeProject();
 			} catch (Exception ex) {
