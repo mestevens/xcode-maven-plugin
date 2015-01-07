@@ -58,13 +58,13 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	/**
 	 * The property to determine whether or not to add the dependencies to the xcodeproj/project.pbxproj file. Defaults to false.
 	 */
-	@Parameter(alias = "xcodeProjectAddDependencies", property = "xcode.add.dependencies", defaultValue = "false", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectAddDependencies", property = "xcode.add.dependencies", defaultValue = "false", required = true)
 	public boolean addDependencies;
 	
 	/**
 	 * The name of the xcodeproj file. Defaults to ${project.artifactId}.xcodeproj.
 	 */
-	@Parameter(alias = "xcodeProjectName", property = "xcode.project.name", defaultValue = "${project.artifactId}.xcodeproj", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectName", property = "xcode.project.name", defaultValue = "${project.artifactId}.xcodeproj", required = true)
 	public String xcodeProjectName;
 	
 	public ProcessRunner processRunner;

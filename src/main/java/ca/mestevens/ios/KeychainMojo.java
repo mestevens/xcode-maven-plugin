@@ -15,13 +15,22 @@ import ca.mestevens.ios.utils.ProcessRunner;
 @Mojo(name = "set-keychain", defaultPhase = LifecyclePhase.INITIALIZE)
 public class KeychainMojo extends AbstractMojo {
 
-	@Parameter(alias = "securityPath", property = "security.path", defaultValue = "/usr/bin/security", readonly = true, required = true)
+	/**
+	 * The path to the security command.
+	 */
+	@Parameter(alias = "securityPath", property = "security.path", defaultValue = "/usr/bin/security", required = true)
 	public String security;
 	
-	@Parameter(alias = "keychainPath", property = "keychain.path", readonly = true, required = false)
+	/**
+	 * The path to the keychain file you want to use.
+	 */
+	@Parameter(alias = "keychainPath", property = "keychain.path", required = false)
 	public String keychain;
 	
-	@Parameter(alias = "keychainPassword", property = "keychain.password", readonly = true, required = false)
+	/**
+	 * The password for the keychain.
+	 */
+	@Parameter(alias = "keychainPassword", property = "keychain.password", required = false)
 	public String keychainPassword;
 	
 	public ProcessRunner processRunner;

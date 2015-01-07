@@ -31,7 +31,7 @@ public class XcodePackageMojo extends AbstractMojo {
 	/**
 	 * The name of the artifact. Defaults to ${project.artifactId}
 	 */
-	@Parameter(alias = "xcodeProjectArtifactName", property = "xcode.artifact.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectArtifactName", property = "xcode.artifact.name", defaultValue = "${project.artifactId}", required = true)
 	public String artifactName;
 	
 	public ProcessRunner processRunner;

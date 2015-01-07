@@ -21,19 +21,19 @@ public class XcodeTestMojo extends AbstractMojo {
 	/**
 	 * The location of the xcodebuild executable. Defaults to /usr/bin/xcodebuild.
 	 */
-	@Parameter(alias = "xcodebuildPath", property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", readonly = true, required = true)
+	@Parameter(alias = "xcodebuildPath", property = "xcodebuild.path", defaultValue = "/usr/bin/xcodebuild", required = true)
 	public String xcodebuild;
 	
 	/**
 	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
 	 */
-	@Parameter(alias = "xcodeProjectPath", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectPath", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
 	public String xcodeProject;
 	
 	/**
 	 * The name of the scheme to build. Defaults to ${project.artifactId}.
 	 */
-	@Parameter(alias = "xcodeProjectScheme", property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", readonly = true, required = true)
+	@Parameter(alias = "xcodeProjectScheme", property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", required = true)
 	public String xcodeScheme;
 	
 	@Parameter(property = "project.build.directory", readonly = true, required = true)
@@ -42,13 +42,13 @@ public class XcodeTestMojo extends AbstractMojo {
 	/**
 	 * Specifies whether or not to skip tests. Default value is false.
 	 */
-	@Parameter(alias = "skipTests", property = "skipTests", defaultValue = "false", readonly = true, required = true)
+	@Parameter(alias = "skipTests", property = "skipTests", defaultValue = "false", required = true)
 	public boolean skipTests;
 	
 	/**
 	 * Specifies whether or not to ignore test failures. Default value is false (it won't ignore failures).
 	 */
-	@Parameter(alias = "ignoreTestFailures", property = "xcode.ignore.test.failures", defaultValue = "false", readonly = true, required = true)
+	@Parameter(alias = "ignoreTestFailures", property = "xcode.ignore.test.failures", defaultValue = "false", required = true)
 	public boolean ignoreFailures;
 	
 	@Parameter

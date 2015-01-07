@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<faqs id="FAQ" title="Frequently Asked Questions">
+
+	<part id="General">
+		<faq id="question">
+			<question>Why aren't there any FAQ questions?</question>
+			<answer>
+				<p>
+					Because this is still under development! I'll be adding to this section as questions are asked or if I feel something needs to be added.
+				</p>
+			</answer>
+		</faq>
+	</part>
+	
+</faqs>
