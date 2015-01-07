@@ -1,7 +1,7 @@
 # xcode-maven-plugin
 
 ## Latest Version
-0.4.0
+0.5.0
 
 ## Description
 
@@ -28,14 +28,6 @@ In addition, if your project is an ios-app, you need to add the following tag
 ```
 So that the framework-dependencies goal will be bound to your lifecycle by default.
 
-## Documentation
+## Documentation and release notes
 
-Documentation (although sparse at the moment) can be found [here](http://mestevens.github.io/xcode-maven-plugin/).
-
-## Release Notes
-* 0.4.0
-	* More tested code!
-	* Added a new goal to set your keychain credentials if you need to.
-* 0.3.2
-	* Static library build/gather dependency support
-	* Finer control over architectures built.
+Documentation and release notes can be found [here](http://mestevens.github.io/xcode-maven-plugin/).
