@@ -19,26 +19,38 @@ import ca.mestevens.ios.utils.ProcessRunner;
 public class XcodePackageApplicationMojo extends AbstractMojo {
 	
 	/**
-	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
+	 * The path to your xcrun command. This defaults to /usr/bin/xcrun."
 	 */
-	@Parameter(alias = "project", property = "xcode.project.path", defaultValue = "${basedir}/${project.artifactId}.xcodeproj", required = true)
-	public String xcodeProject;
-	
 	@Parameter(alias = "xcrun", property = "xcode.project.xcrun.path", defaultValue = "/usr/bin/xcrun", required = true)
 	public String xcrun;
 	
+	/**
+	 * A flag to determine whether or not you want to deploy your .app to the simulator and run it.
+	 */
 	@Parameter(alias = "deployToSimulator", property = "xcode.project.deploy", defaultValue = "false", required = false)
 	public boolean deploy;
 	
+	/**
+	 * The simulator to deploy to, usually takes the form of something like "iPhone <#> (<iOS version> Simulator)". Defaults to "iPhone 6 (8.1 Simulator)".
+	 */
 	@Parameter(alias = "iPhoneSimulatorName", property = "xcode.project.simulator.name", defaultValue = "iPhone 6 (8.1 Simulator)", required = false)
 	public String deployDevice;
 	
+	/**
+	 * The bundle id of your application. This is required.
+	 */
 	@Parameter(alias = "bundleId", property = "xcode.project.bundle.id", required = true)
 	public String bundleId;
 	
+	/**
+	 * The path to your .app file created by the build mojo. Defaults to "${project.build.directory}/build/${project.artifactId}.app".
+	 */
 	@Parameter(alias = "appPath", property = "xcode.project.app.path", defaultValue = "${project.build.directory}/build/${project.artifactId}.app", required = true)
 	public String appPath;
 	
+	/**
+	 * The name of the ipa file you want to create. Defaults to ${project.artifactId}.ipa.
+	 */
 	@Parameter(alias = "ipaName", property = "xcode.project.ipa.name", defaultValue = "${project.artifactId}.ipa", required = false)
 	public String ipaName;
 	
