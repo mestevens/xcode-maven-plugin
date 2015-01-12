@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="Date-Revision-yyyymmdd" content="20150112" />
     <meta http-equiv="Content-Language" content="en" />
-    <title>xcode-maven-plugin &#x2013; xcode:set-keychain</title>
+    <title>xcode-maven-plugin &#x2013; xcode:xcode-package-app</title>
     <link rel="stylesheet" href="./css/apache-maven-fluido-1.3.0.min.css" />
     <link rel="stylesheet" href="./css/site.css" />
     <link rel="stylesheet" href="./css/print.css" media="print" />
@@ -136,15 +136,16 @@
             
   
     <div class="section">
-<h2><a name="xcode:set-keychain"></a>xcode:set-keychain</h2>
+<h2><a name="xcode:xcode-package-app"></a>xcode:xcode-package-app</h2>
       
 <p><b>Full name</b>:</p>
       
-<p>ca.mestevens.ios:xcode-maven-plugin:0.6.0:set-keychain</p>
+<p>ca.mestevens.ios:xcode-maven-plugin:0.6.0:xcode-package-app</p>
       
 <p><b>Description</b>:</p>
       
-<div>Goal to set your keychain if needed.</div>
+<div>Goal to package your .app file and optionally deploy it to the
+simulator.</div>
       
 <p><b>Attributes</b>:</p>
       
@@ -152,7 +153,7 @@
         
 <li>Requires a Maven project to be executed.</li>
         
-<li>Binds by default to the <a class="externalLink" href="http://maven.apache.org/ref/current/maven-core/lifecycles.html">lifecycle phase</a>: <tt>initialize</tt>.</li>
+<li>Binds by default to the <a class="externalLink" href="http://maven.apache.org/ref/current/maven-core/lifecycles.html">lifecycle phase</a>: <tt>package</tt>.</li>
       </ul>
       
 <div class="section">
@@ -173,13 +174,36 @@
           
 <tr class="b">
             
-<td><b><a href="#security">security</a></b></td>
+<td><b><a href="#appPath">appPath</a></b></td>
             
 <td><tt>String</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>The path to the security command.<br /><b>Default value is</b>: <tt>/usr/bin/security</tt>.<br /><b>User property is</b>: <tt>security.path</tt>.</td>
+<td>The path to your .app file created by the build mojo. Defaults to
+&quot;${project.build.directory}/build/${project.artifactId}.app&quot;.<br /><b>Default value is</b>: <tt>${project.build.directory}/build/${project.artifactId}.app</tt>.<br /><b>User property is</b>: <tt>xcode.project.app.path</tt>.</td>
+          </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#bundleId">bundleId</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>The bundle id of your application. This is required.<br /><b>User property is</b>: <tt>xcode.project.bundle.id</tt>.</td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#xcrun">xcrun</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>The path to your xcrun command. This defaults to /usr/bin/xcrun.&quot;<br /><b>Default value is</b>: <tt>/usr/bin/xcrun</tt>.<br /><b>User property is</b>: <tt>xcode.project.xcrun.path</tt>.</td>
           </tr>
         </table>
       </div>
@@ -202,24 +226,38 @@
           
 <tr class="b">
             
-<td><b><a href="#keychain">keychain</a></b></td>
+<td><b><a href="#deploy">deploy</a></b></td>
             
-<td><tt>String</tt></td>
+<td><tt>boolean</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>The path to the keychain file you want to use.<br /><b>User property is</b>: <tt>keychain.path</tt>.</td>
+<td>A flag to determine whether or not you want to deploy your .app to
+the simulator and run it.<br /><b>Default value is</b>: <tt>false</tt>.<br /><b>User property is</b>: <tt>xcode.project.deploy</tt>.</td>
           </tr>
           
 <tr class="a">
             
-<td><b><a href="#keychainPassword">keychainPassword</a></b></td>
+<td><b><a href="#deployDevice">deployDevice</a></b></td>
             
 <td><tt>String</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>The password for the keychain.<br /><b>User property is</b>: <tt>keychain.password</tt>.</td>
+<td>The simulator to deploy to, usually takes the form of something
+like &quot;iPhone <br /><b>Default value is</b>: <tt>iPhone 6 (8.1 Simulator)</tt>.<br /><b>User property is</b>: <tt>xcode.project.simulator.name</tt>.</td>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#ipaName">ipaName</a></b></td>
+            
+<td><tt>String</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>The name of the ipa file you want to create. Defaults to
+${project.artifactId}.ipa.<br /><b>Default value is</b>: <tt>${project.artifactId}.ipa</tt>.<br /><b>User property is</b>: <tt>xcode.project.ipa.name</tt>.</td>
           </tr>
         </table>
       </div>
@@ -227,33 +265,10 @@
 <div class="section">
 <h3><a name="Parameter_Details"></a>Parameter Details</h3>
         
-<p><b><a name="keychain">keychain</a>:</b></p>
+<p><b><a name="appPath">appPath</a>:</b></p>
         
-<div>The path to the keychain file you want to use.</div>
-        
-<ul>
-          
-<li><b>Type</b>: <tt>java.lang.String</tt></li>
-          
-<li><b>Required</b>: <tt>No</tt></li>
-          
-<li><b>User Property</b>: <tt>keychain.path</tt></li>
-        </ul><hr />
-<p><b><a name="keychainPassword">keychainPassword</a>:</b></p>
-        
-<div>The password for the keychain.</div>
-        
-<ul>
-          
-<li><b>Type</b>: <tt>java.lang.String</tt></li>
-          
-<li><b>Required</b>: <tt>No</tt></li>
-          
-<li><b>User Property</b>: <tt>keychain.password</tt></li>
-        </ul><hr />
-<p><b><a name="security">security</a>:</b></p>
-        
-<div>The path to the security command.</div>
+<div>The path to your .app file created by the build mojo. Defaults to
+&quot;${project.build.directory}/build/${project.artifactId}.app&quot;.</div>
         
 <ul>
           
@@ -261,9 +276,80 @@
           
 <li><b>Required</b>: <tt>Yes</tt></li>
           
-<li><b>User Property</b>: <tt>security.path</tt></li>
+<li><b>User Property</b>: <tt>xcode.project.app.path</tt></li>
           
-<li><b>Default</b>: <tt>/usr/bin/security</tt></li>
+<li><b>Default</b>: <tt>${project.build.directory}/build/${project.artifactId}.app</tt></li>
+        </ul><hr />
+<p><b><a name="bundleId">bundleId</a>:</b></p>
+        
+<div>The bundle id of your application. This is required.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>Yes</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.bundle.id</tt></li>
+        </ul><hr />
+<p><b><a name="deploy">deploy</a>:</b></p>
+        
+<div>A flag to determine whether or not you want to deploy your .app to
+the simulator and run it.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>boolean</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.deploy</tt></li>
+          
+<li><b>Default</b>: <tt>false</tt></li>
+        </ul><hr />
+<p><b><a name="deployDevice">deployDevice</a>:</b></p>
+        
+<div>The simulator to deploy to, usually takes the form of something
+like &quot;iPhone </div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.simulator.name</tt></li>
+          
+<li><b>Default</b>: <tt>iPhone 6 (8.1 Simulator)</tt></li>
+        </ul><hr />
+<p><b><a name="ipaName">ipaName</a>:</b></p>
+        
+<div>The name of the ipa file you want to create. Defaults to
+${project.artifactId}.ipa.</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>No</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.ipa.name</tt></li>
+          
+<li><b>Default</b>: <tt>${project.artifactId}.ipa</tt></li>
+        </ul><hr />
+<p><b><a name="xcrun">xcrun</a>:</b></p>
+        
+<div>The path to your xcrun command. This defaults to /usr/bin/xcrun.&quot;</div>
+        
+<ul>
+          
+<li><b>Type</b>: <tt>java.lang.String</tt></li>
+          
+<li><b>Required</b>: <tt>Yes</tt></li>
+          
+<li><b>User Property</b>: <tt>xcode.project.xcrun.path</tt></li>
+          
+<li><b>Default</b>: <tt>/usr/bin/xcrun</tt></li>
         </ul>
       </div>
     </div>
