@@ -66,6 +66,13 @@ public class XcodeBuildMojo extends AbstractMojo {
 	public String xcodeScheme;
 	
 	/**
+	 * Used when building an xcode-application. Determines what sdk to build the app for. Either iphoneos or iphonesimulator.
+	 * Defaults to iphonesimulator.
+	 */
+	@Parameter(alias = "sdk", property = "xcode.project.sdk", defaultValue = "iphonesimulator", required = false)
+	public String xcodeSdk;
+	
+	/**
 	 * Use the specified timeout when searching for a destination device. The default is 30 seconds.
 	 */
 	@Parameter(alias = "destinationTimeout", property = "xcode.project.destination.timeout", required = false)
@@ -142,88 +149,98 @@ public class XcodeBuildMojo extends AbstractMojo {
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		String packaging = project.getPackaging();
-		if (simulatorArchs == null || simulatorArchs.size() == 0) {
-			simulatorArchs = new ArrayList<String>();
-			simulatorArchs.add("i386");
-			simulatorArchs.add("x86_64");
-		}
-		if (deviceArchs == null || deviceArchs.size() == 0) {
-			deviceArchs = new ArrayList<String>();
-			File pbxprojFile = new File(xcodeProject + "/project.pbxproj");
-			if (pbxprojFile.exists()) {
-				try {
-					XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
-					XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
-					for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
-						XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
-						if (buildConfiguration != null) {
-							List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
-							if (archs != null) {
-								deviceArchs = archs;
-								break;
-							}
-						}
-					}
-				} catch (InvalidObjectFormatException e) {
-					throw new MojoExecutionException(e.getMessage());
-				}
+		if (packaging.equals("xcode-framework") || packaging.equals("xcode-library")) {
+			if (simulatorArchs == null || simulatorArchs.size() == 0) {
+				simulatorArchs = new ArrayList<String>();
+				simulatorArchs.add("i386");
+				simulatorArchs.add("x86_64");
 			}
 			if (deviceArchs == null || deviceArchs.size() == 0) {
-				deviceArchs.add("armv7");
-				deviceArchs.add("arm64");
+				deviceArchs = new ArrayList<String>();
+				File pbxprojFile = new File(xcodeProject + "/project.pbxproj");
+				if (pbxprojFile.exists()) {
+					try {
+						XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
+						XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
+						for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
+							XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
+							if (buildConfiguration != null) {
+								List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
+								if (archs != null) {
+									deviceArchs = archs;
+									break;
+								}
+							}
+						}
+					} catch (InvalidObjectFormatException e) {
+						throw new MojoExecutionException(e.getMessage());
+					}
+				}
+				if (deviceArchs == null || deviceArchs.size() == 0) {
+					deviceArchs.add("armv7");
+					deviceArchs.add("arm64");
+				}
 			}
-		}
-		int returnValue = 0;
-		List<String> buildCommands = createCommonBuildCommands();
-		for (String simulatorArch : simulatorArchs) {
-			List<String> simulatorBuildCommands = new ArrayList<String>(buildCommands);
-			simulatorBuildCommands.add("-sdk");
-			simulatorBuildCommands.add("iphonesimulator");
-			simulatorBuildCommands.add("-arch");
-			simulatorBuildCommands.add(simulatorArch);
-			simulatorBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator-" + simulatorArch);
-			simulatorBuildCommands.add("build");
-			returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));
-			checkReturnValue(returnValue);
-		}
-		for (String deviceArch : deviceArchs) {
-			List<String> deviceBuildCommands = new ArrayList<String>(buildCommands);
-			deviceBuildCommands.add("-sdk");
-			deviceBuildCommands.add("iphoneos");
-			deviceBuildCommands.add("-arch");
-			deviceBuildCommands.add(deviceArch);
-			deviceBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphoneos-" + deviceArch);
-			deviceBuildCommands.add("build");
-			returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));
-			checkReturnValue(returnValue);
-		}
-		List<String> lipoCommand = new ArrayList<String>();
-		lipoCommand.add("lipo");
-		lipoCommand.add("-create");
-		lipoCommand.add("-output");
-		
-		String libraryLocation = "";
-		if (packaging.equals("xcode-framework")) {
-			lipoCommand.add(artifactName);
-			libraryLocation = artifactName + ".framework/" + artifactName;
-		} else if (packaging.equals("xcode-library")) {
-			lipoCommand.add("lib" + artifactName + ".a");
-			libraryLocation =  "lib" + artifactName + ".a";
-		}
-		for (String simulatorArch : simulatorArchs) {
-			lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + libraryLocation);
-		}
-		for (String deviceArch : deviceArchs) {
-			lipoCommand.add("iphoneos-" + deviceArch + "/" + libraryLocation);
-		}
+			int returnValue = 0;
+			List<String> buildCommands = createCommonBuildCommands();
+			for (String simulatorArch : simulatorArchs) {
+				List<String> simulatorBuildCommands = new ArrayList<String>(buildCommands);
+				simulatorBuildCommands.add("-sdk");
+				simulatorBuildCommands.add("iphonesimulator");
+				simulatorBuildCommands.add("-arch");
+				simulatorBuildCommands.add(simulatorArch);
+				simulatorBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphonesimulator-" + simulatorArch);
+				simulatorBuildCommands.add("build");
+				returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));
+				checkReturnValue(returnValue);
+			}
+			for (String deviceArch : deviceArchs) {
+				List<String> deviceBuildCommands = new ArrayList<String>(buildCommands);
+				deviceBuildCommands.add("-sdk");
+				deviceBuildCommands.add("iphoneos");
+				deviceBuildCommands.add("-arch");
+				deviceBuildCommands.add(deviceArch);
+				deviceBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/iphoneos-" + deviceArch);
+				deviceBuildCommands.add("build");
+				returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));
+				checkReturnValue(returnValue);
+			}
+			List<String> lipoCommand = new ArrayList<String>();
+			lipoCommand.add("lipo");
+			lipoCommand.add("-create");
+			lipoCommand.add("-output");
 
-		returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
-		checkReturnValue(returnValue);
-		if (packaging.equals("xcode-framework")) {
-			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + artifactName + ".framework", ".");
-			processRunner.runProcess(targetDirectory, "cp", artifactName, artifactName + ".framework/.");
-		} else if (packaging.equals("xcode-library")) {
-			processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
+			String libraryLocation = "";
+			if (packaging.equals("xcode-framework")) {
+				lipoCommand.add(artifactName);
+				libraryLocation = artifactName + ".framework/" + artifactName;
+			} else if (packaging.equals("xcode-library")) {
+				lipoCommand.add("lib" + artifactName + ".a");
+				libraryLocation =  "lib" + artifactName + ".a";
+			}
+			for (String simulatorArch : simulatorArchs) {
+				lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + libraryLocation);
+			}
+			for (String deviceArch : deviceArchs) {
+				lipoCommand.add("iphoneos-" + deviceArch + "/" + libraryLocation);
+			}
+
+			returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
+			checkReturnValue(returnValue);
+			if (packaging.equals("xcode-framework")) {
+				processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + artifactName + ".framework", ".");
+				processRunner.runProcess(targetDirectory, "cp", artifactName, artifactName + ".framework/.");
+			} else if (packaging.equals("xcode-library")) {
+				processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
+			}
+		} else if (packaging.equals("xcode-application")) {
+			List<String> applicationBuildCommands = createCommonBuildCommands();
+			applicationBuildCommands.add("-sdk");
+			applicationBuildCommands.add(xcodeSdk);
+			applicationBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/build");
+			applicationBuildCommands.add("build");
+			int returnValue = processRunner.runProcess(null, applicationBuildCommands.toArray(new String[applicationBuildCommands.size()]));
+			checkReturnValue(returnValue);
 		}
 	}
 	
