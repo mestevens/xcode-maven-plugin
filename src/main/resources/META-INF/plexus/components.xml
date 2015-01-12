@@ -137,6 +137,12 @@
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build
 							</compile>
+							<test>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-test
+							</test>
+							<package>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-package-app
+							</package>
 						</phases>
 					</lifecycle>
 					<lifecycle>
