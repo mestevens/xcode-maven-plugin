@@ -24,5 +24,8 @@
             <item name="Changes" href="github-report.html" />
             <item name="FAQ" href="faq.html" />
         </menu>
+        <menu name="Usage Information">
+        </menu>
+        <menu ref="reports" />
     </body>
 </project>

@@ -3,7 +3,7 @@
 
 	<groupId>ca.mestevens.ios</groupId>
 	<artifactId>xcode-maven-plugin</artifactId>
-	<version>0.5.0</version>
+	<version>0.6.0</version>
 	<packaging>maven-plugin</packaging>
 	<name>xcode-maven-plugin</name>
 	<description>A maven plugin to facilitate xcode building/dependency management/testing</description>
@@ -320,6 +320,23 @@
 					<reportSet>
 						<reports>
 							<report>github-report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>2.7</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>index</report>
+							<report>project-team</report>
+							<report>license</report>
+							<report>summary</report>
+							<report>dependency-info</report>
+							<report>issue-tracking</report>
 						</reports>
 					</reportSet>
 				</reportSets>
