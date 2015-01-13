@@ -66,13 +66,6 @@ public class XcodeBuildMojo extends AbstractMojo {
 	public String xcodeScheme;
 	
 	/**
-	 * Used when building an xcode-application. Determines what sdk to build the app for. Either iphoneos or iphonesimulator.
-	 * Defaults to iphonesimulator.
-	 */
-	@Parameter(alias = "sdk", property = "xcode.project.sdk", defaultValue = "iphonesimulator", required = false)
-	public String xcodeSdk;
-	
-	/**
 	 * Use the specified timeout when searching for a destination device. The default is 30 seconds.
 	 */
 	@Parameter(alias = "destinationTimeout", property = "xcode.project.destination.timeout", required = false)
@@ -235,11 +228,18 @@ public class XcodeBuildMojo extends AbstractMojo {
 			}
 		} else if (packaging.equals("xcode-application")) {
 			List<String> applicationBuildCommands = createCommonBuildCommands();
-			applicationBuildCommands.add("-sdk");
-			applicationBuildCommands.add(xcodeSdk);
-			applicationBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/build");
 			applicationBuildCommands.add("build");
-			int returnValue = processRunner.runProcess(null, applicationBuildCommands.toArray(new String[applicationBuildCommands.size()]));
+			List<String> simulatorBuildCommands = new ArrayList<String>(applicationBuildCommands);
+			simulatorBuildCommands.add("-sdk");
+			simulatorBuildCommands.add("iphonesimulator");
+			simulatorBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/build/iPhone-simulator");
+			int returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));
+			checkReturnValue(returnValue);
+			List<String> deviceBuildCommands = new ArrayList<String>(applicationBuildCommands);
+			deviceBuildCommands.add("-sdk");
+			deviceBuildCommands.add("iphoneos");
+			deviceBuildCommands.add("CONFIGURATION_BUILD_DIR=" + targetDirectory + "/build/iPhone");
+			returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));
 			checkReturnValue(returnValue);
 		}
 	}
