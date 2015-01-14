@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>Library Usage</title>
+	</head>
+	<body>
+		<h1>Building a Library</h1>
+		<p>
+			To start building an xcode library, make sure that you set the packaging of your pom.xml to xcode-library as seen below:
+<pre>&lt;packaging&gt;xcode-library&lt;packaging&gt;</pre>
+        	This will set-up the default lifecycle to handle building/packaging an xcode library.
+		</p>
+		<h1>Consuming a Library</h1>
+		<p>
+			Generally you will consume an xcode library with an iOS application in this plugin. Assuming you have a packaging of "xcode-application" all you have to do is include your library as a dependency in your dependency section
+<pre>&lt;dependency&gt;
+	&lt;groupId&gt;com.my.group&lt;groupId&gt;
+	&lt;artifactId&gt;my-library&lt;artifactId&gt;
+	&lt;version&gt;1.0.0&lt;version&gt;
+	&lt;type&gt;xcode-library&lt;type&gt;
+&lt;dependency&gt;</pre>
+			When the initialize goal is run, this will place the library (and header files), in your target directory. And if the right <a href="framework-dependencies-mojo.html#addDependencies">flags</a> are provided to the plugin, it will also add them to your application so you don't have to import them.
+		</p>
+	</body>
+</html>

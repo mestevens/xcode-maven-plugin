@@ -27,7 +27,7 @@ public class XcodePackageApplicationMojo extends AbstractMojo {
 	/**
 	 * A flag to determine whether or not you want to deploy your .app to the simulator and run it.
 	 */
-	@Parameter(alias = "deployToSimulator", property = "xcode.project.deploy", defaultValue = "false", required = false)
+	@Parameter(alias = "deployApp", property = "xcode.project.deploy", defaultValue = "false", required = false)
 	public boolean deploy;
 	
 	/**
@@ -45,8 +45,14 @@ public class XcodePackageApplicationMojo extends AbstractMojo {
 	/**
 	 * The path to your .app file created by the build mojo. Defaults to "${project.build.directory}/build/${project.artifactId}.app".
 	 */
-	@Parameter(alias = "appPath", property = "xcode.project.app.path", defaultValue = "${project.build.directory}/build/${project.artifactId}.app", required = true)
-	public String appPath;
+	@Parameter(alias = "simulatorAppPath", property = "xcode.project.simulator.app.path", defaultValue = "${project.build.directory}/build/iPhone-simulator/${project.artifactId}.app", required = true)
+	public String simulatorAppPath;
+	
+	/**
+	 * The path to your .app file created by the build mojo. Defaults to "${project.build.directory}/build/${project.artifactId}.app".
+	 */
+	@Parameter(alias = "deviceAppPath", property = "xcode.project.device.app.path", defaultValue = "${project.build.directory}/build/iPhone/${project.artifactId}.app", required = true)
+	public String deviceAppPath;
 	
 	/**
 	 * The name of the ipa file you want to create. Defaults to ${project.artifactId}.ipa.
@@ -71,31 +77,48 @@ public class XcodePackageApplicationMojo extends AbstractMojo {
 		packageCommand.add("iphoneos");
 		packageCommand.add("PackageApplication");
 		packageCommand.add("-v");
-		packageCommand.add(appPath);
+		packageCommand.add(simulatorAppPath);
 		packageCommand.add("-o");
 		packageCommand.add(targetDirectory + "/" + ipaName);
 		processRunner.runProcess(targetDirectory, packageCommand.toArray(new String[packageCommand.size()]));
 		if (deploy) {
-			List<String> instrumentsCommand = new ArrayList<String>();
-			instrumentsCommand.add(xcrun);
-			instrumentsCommand.add("instruments");
-			instrumentsCommand.add("-w");
-			instrumentsCommand.add(deployDevice);
-			processRunner.runProcess(targetDirectory, instrumentsCommand.toArray(new String[instrumentsCommand.size()]));
-			List<String> simctlInstallCommand = new ArrayList<String>();
-			simctlInstallCommand.add(xcrun);
-			simctlInstallCommand.add("simctl");
-			simctlInstallCommand.add("install");
-			simctlInstallCommand.add("booted");
-			simctlInstallCommand.add(appPath);
-			processRunner.runProcess(targetDirectory, simctlInstallCommand.toArray(new String[simctlInstallCommand.size()]));
-			List<String> simctlLaunchCommand = new ArrayList<String>();
-			simctlLaunchCommand.add(xcrun);
-			simctlLaunchCommand.add("simctl");
-			simctlLaunchCommand.add("launch");
-			simctlLaunchCommand.add("booted");
-			simctlLaunchCommand.add(bundleId);
-			processRunner.runProcess(targetDirectory, simctlLaunchCommand.toArray(new String[simctlLaunchCommand.size()]));
+			int returnCode = processRunner.runProcess(targetDirectory, "ios-deploy", "-c");
+			if (returnCode == 127) {
+				returnCode = processRunner.runProcess(targetDirectory, "npm", "install", "-g", "ios-deploy");
+				if (returnCode == 127) {
+					returnCode = processRunner.runProcess(targetDirectory, "brew", "install", "node");
+					if (returnCode == 127) {
+						processRunner.runProcess(targetDirectory, "ruby", "-e", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"");
+						processRunner.runProcess(targetDirectory, "brew", "install", "node");
+					}
+					processRunner.runProcess(targetDirectory, "npm", "install", "-g", "ios-deploy");
+				}
+				returnCode = processRunner.runProcess(targetDirectory, "ios-deploy", "-c");
+			}
+			if (returnCode == 0) {
+				processRunner.runProcess(targetDirectory, "ios-deploy", "-b", deviceAppPath);
+			} else {
+				List<String> instrumentsCommand = new ArrayList<String>();
+				instrumentsCommand.add(xcrun);
+				instrumentsCommand.add("instruments");
+				instrumentsCommand.add("-w");
+				instrumentsCommand.add(deployDevice);
+				processRunner.runProcess(targetDirectory, instrumentsCommand.toArray(new String[instrumentsCommand.size()]));
+				List<String> simctlInstallCommand = new ArrayList<String>();
+				simctlInstallCommand.add(xcrun);
+				simctlInstallCommand.add("simctl");
+				simctlInstallCommand.add("install");
+				simctlInstallCommand.add("booted");
+				simctlInstallCommand.add(simulatorAppPath);
+				processRunner.runProcess(targetDirectory, simctlInstallCommand.toArray(new String[simctlInstallCommand.size()]));
+				List<String> simctlLaunchCommand = new ArrayList<String>();
+				simctlLaunchCommand.add(xcrun);
+				simctlLaunchCommand.add("simctl");
+				simctlLaunchCommand.add("launch");
+				simctlLaunchCommand.add("booted");
+				simctlLaunchCommand.add(bundleId);
+				processRunner.runProcess(targetDirectory, simctlLaunchCommand.toArray(new String[simctlLaunchCommand.size()]));
+			}
 		}
 	}
 
