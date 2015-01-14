@@ -1,7 +1,7 @@
 # xcode-maven-plugin
 
 ## Latest Version
-0.6.0
+0.7.0
 
 ## Description
 
