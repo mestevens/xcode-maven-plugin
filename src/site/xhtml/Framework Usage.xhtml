@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>Framework Usage</title>
+	</head>
+	<body>
+		<h1>Building a Framework</h1>
+		<p>
+			To start building an xcode framework, make sure that you set the packaging of your pom.xml to xcode-framework as seen below:
+<pre>&lt;packaging&gt;xcode-framework&lt;packaging&gt;</pre>
+        	This will set-up the default lifecycle to handle building/packaging an xcode framework.
+		</p>
+		<h1>Consuming a Framework</h1>
+		<p>
+			Generally you will consume an xcode framework with an iOS application in this plugin. Assuming you have a packaging of "xcode-application" all you have to do is include your framework as a dependency in your dependency section
+<pre>&lt;dependency&gt;
+	&lt;groupId&gt;com.my.group&lt;groupId&gt;
+	&lt;artifactId&gt;my-framework&lt;artifactId&gt;
+	&lt;version&gt;1.0.0&lt;version&gt;
+	&lt;type&gt;xcode-framework&lt;type&gt;
+&lt;dependency&gt;</pre>
+			When the initialize goal is run, this will place the framework in your target directory. And if the right <a href="framework-dependencies-mojo.html#addDependencies">flags</a> are provided to the plugin, it will also add them to your application so you don't have to import them.
+		</p>
+	</body>
+</html>

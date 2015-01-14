@@ -25,6 +25,10 @@
             <item name="FAQ" href="faq.html" />
         </menu>
         <menu name="Usage Information">
+            <item name="Getting Started" href="Getting Started.html" />
+            <item name="Library Usage" href="Library Usage.html" />
+            <item name="Framework Usage" href="Framework Usage.html" />
+            <item name="iOS Application Usage" href="iOS Application Usage.html" />
         </menu>
         <menu ref="reports" />
     </body>
