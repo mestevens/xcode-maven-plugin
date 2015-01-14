@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="Date-Revision-yyyymmdd" content="20150114" />
     <meta http-equiv="Content-Language" content="en" />
-    <title>xcode-maven-plugin &#x2013; xcode:xcode-package-framework</title>
+    <title>xcode-maven-plugin &#x2013; Framework Usage</title>
     <link rel="stylesheet" href="./css/apache-maven-fluido-1.3.0.min.css" />
     <link rel="stylesheet" href="./css/site.css" />
     <link rel="stylesheet" href="./css/print.css" media="print" />
@@ -100,12 +100,10 @@
         Library Usage</a>
             </li>
                   
-      <li>
+      <li class="active">
     
-                          <a href="Framework Usage.html" title="Framework Usage">
-          <i class="none"></i>
-        Framework Usage</a>
-            </li>
+            <a href="#"><i class="none"></i>Framework Usage</a>
+          </li>
                   
       <li>
     
@@ -162,76 +160,33 @@
         <div id="bodyColumn"  class="span10" >
                                   
             
-  
-    <div class="section">
-<h2><a name="xcode:xcode-package-framework"></a>xcode:xcode-package-framework</h2>
-      
-<p><b>Full name</b>:</p>
-      
-<p>ca.mestevens.ios:xcode-maven-plugin:0.7.0:xcode-package-framework</p>
-      
-<p><b>Description</b>:</p>
-      
-<div>Goal to package the artifact(s).</div>
-      
-<p><b>Attributes</b>:</p>
-      
-<ul>
-        
-<li>Requires a Maven project to be executed.</li>
-        
-<li>Binds by default to the <a class="externalLink" href="http://maven.apache.org/ref/current/maven-core/lifecycles.html">lifecycle phase</a>: <tt>package</tt>.</li>
-      </ul>
-      
-<div class="section">
-<h3><a name="Required_Parameters"></a>Required Parameters</h3>
-        
-<table class="table table-striped" border="0">
-          
-<tr class="a">
-            
-<th>Name</th>
-            
-<th>Type</th>
-            
-<th>Since</th>
-            
-<th>Description</th>
-          </tr>
-          
-<tr class="b">
-            
-<td><b><a href="#artifactName">artifactName</a></b></td>
-            
-<td><tt>String</tt></td>
-            
-<td><tt>-</tt></td>
-            
-<td>The name of the artifact. Defaults to ${project.artifactId}<br /><b>Default value is</b>: <tt>${project.artifactId}</tt>.<br /><b>User property is</b>: <tt>xcode.artifact.name</tt>.</td>
-          </tr>
-        </table>
-      </div>
-      
-<div class="section">
-<h3><a name="Parameter_Details"></a>Parameter Details</h3>
-        
-<p><b><a name="artifactName">artifactName</a>:</b></p>
-        
-<div>The name of the artifact. Defaults to ${project.artifactId}</div>
-        
-<ul>
-          
-<li><b>Type</b>: <tt>java.lang.String</tt></li>
-          
-<li><b>Required</b>: <tt>Yes</tt></li>
-          
-<li><b>User Property</b>: <tt>xcode.artifact.name</tt></li>
-          
-<li><b>Default</b>: <tt>${project.artifactId}</tt></li>
-        </ul>
-      </div>
-    </div>
-  
+	
+	
+		<h1>Building a Framework</h1>
+		
+<p>
+			To start building an xcode framework, make sure that you set the packaging of your pom.xml to xcode-framework as seen below:
+</p>
+<div>
+<pre>&lt;packaging&gt;xcode-framework&lt;packaging&gt;</pre></div>
+        	This will set-up the default lifecycle to handle building/packaging an xcode framework.
+		
+		
+<h1>Consuming a Framework</h1>
+		
+<p>
+			Generally you will consume an xcode framework with an iOS application in this plugin. Assuming you have a packaging of &quot;xcode-application&quot; all you have to do is include your framework as a dependency in your dependency section
+</p>
+<div>
+<pre>&lt;dependency&gt;
+	&lt;groupId&gt;com.my.group&lt;groupId&gt;
+	&lt;artifactId&gt;my-framework&lt;artifactId&gt;
+	&lt;version&gt;1.0.0&lt;version&gt;
+	&lt;type&gt;xcode-framework&lt;type&gt;
+&lt;dependency&gt;</pre></div>
+			When the initialize goal is run, this will place the framework in your target directory. And if the right <a href="framework-dependencies-mojo.html#addDependencies">flags</a> are provided to the plugin, it will also add them to your application so you don't have to import them.
+		
+	
 
                   </div>
             </div>
