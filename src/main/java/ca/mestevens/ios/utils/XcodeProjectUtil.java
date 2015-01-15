@@ -180,20 +180,18 @@ public class XcodeProjectUtil {
 				}
 			}
 			//Add/Edit the Frameworks group
-			String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();
-			String groupIdentifier = xcodeProject.getGroupWithIdentifier(mainGroupIdentifier).getChildren().get(0).getIdentifier();
-			PBXFileElement group = xcodeProject.getGroupWithIdentifier(groupIdentifier);
 			String frameworkGroupIdentifier = null;
-			for(CommentedIdentifier child : group.getChildren()) {
-				if (child.getComment().equals("Frameworks")) {
-					frameworkGroupIdentifier = child.getIdentifier();
+			for(PBXFileElement group : xcodeProject.getGroups()) {
+				if (group.getName() != null && (group.getName().equals("Frameworks") || group.getName().equals("\"Frameworks\""))) {
+					frameworkGroupIdentifier = group.getReference().getIdentifier();
 				}
 			}
 			PBXFileElement frameworkGroup = null;
 			if (frameworkGroupIdentifier != null) {
 				frameworkGroup = xcodeProject.getGroupWithIdentifier(frameworkGroupIdentifier);
 			} else {
-				frameworkGroup = xcodeProject.createGroup("Frameworks", groupIdentifier);
+				String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();
+				frameworkGroup = xcodeProject.createGroup("Frameworks", mainGroupIdentifier);
 			}
 			for (CommentedIdentifier fileReference : fileReferenceIdentifiers) {
 				boolean found = false;

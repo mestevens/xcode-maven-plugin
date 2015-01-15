@@ -33,7 +33,7 @@ public class XcodeTestMojo extends AbstractMojo {
 	/**
 	 * The name of the scheme to build. Defaults to ${project.artifactId}.
 	 */
-	@Parameter(alias = "xcodeProjectScheme", property = "xcode.project.scheme.name", defaultValue = "${project.artifactId}", required = true)
+	@Parameter(alias = "xcodeProjectTestScheme", property = "xcode.project.test.scheme", defaultValue = "${project.artifactId}", required = true)
 	public String xcodeScheme;
 	
 	@Parameter(property = "project.build.directory", readonly = true, required = true)

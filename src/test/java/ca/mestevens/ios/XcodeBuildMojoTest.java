@@ -47,6 +47,8 @@ public class XcodeBuildMojoTest {
 		buildMojo.processRunner = mockProcessRunner;
 		buildMojo.xcodebuild = xcodebuild;
 		buildMojo.targetDirectory = target;
+		buildMojo.buildDevice = true;
+		buildMojo.buildSimulator = true;
 	}
 	
 	@AfterMethod
@@ -171,9 +173,6 @@ public class XcodeBuildMojoTest {
 		for (String simulatorArch : simulatorArchs) {
 			lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + artifactName + ".framework/" + artifactName);
 		}
-		for (String deviceArch : deviceArchs) {
-			lipoCommand.add("iphoneos-" + deviceArch + "/" + artifactName + ".framework/" + artifactName);
-		}
 		when(mockProcessRunner.runProcess(target, lipoCommand.toArray(new String[lipoCommand.size()]))).thenReturn(0);
 		when(mockProcessRunner.runProcess(any(String.class), any(String.class))).thenReturn(0);
 		buildMojo.deviceArchs = new ArrayList<String>();
@@ -185,7 +184,7 @@ public class XcodeBuildMojoTest {
 					"-arch", simulatorArch, "CONFIGURATION_BUILD_DIR=" + target + "/iphonesimulator-" + simulatorArch, "build");
 		}
 		for (String deviceArch : deviceArchs) {
-			verify(mockProcessRunner, times(1)).runProcess(null, xcodebuild, "-project", projectString, "-scheme", schemeString, "-sdk", "iphoneos",
+			verify(mockProcessRunner, times(0)).runProcess(null, xcodebuild, "-project", projectString, "-scheme", schemeString, "-sdk", "iphoneos",
 					"-arch", deviceArch, "CONFIGURATION_BUILD_DIR=" + target + "/iphoneos-" + deviceArch, "build");
 		}
 	}
@@ -221,7 +220,6 @@ public class XcodeBuildMojoTest {
 			when(mockProcessRunner.runProcess(null, xcodebuild, "-project", projectString, "-scheme", schemeString, "-sdk", "iphoneos",
 					"-arch", deviceArch, "CONFIGURATION_BUILD_DIR=target/iphoneos-" + deviceArch, "build")).thenReturn(1);
 		}
-		buildMojo.deviceArchs = new ArrayList<String>();
 
 		buildMojo.execute();
 	}
