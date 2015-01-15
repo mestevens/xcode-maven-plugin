@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XcodeTestMojo.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">xcode-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">ca.mestevens.ios</a> &gt; <span class="el_source">XcodeTestMojo.java</span></div><h1>XcodeTestMojo.java</h1><pre class="source lang-java linenums">package ca.mestevens.ios;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import ca.mestevens.ios.utils.ProcessRunner;
+
+/**
+ * Goal to test your artifact(s).
+ */
+@Mojo(name = &quot;xcode-test&quot;, defaultPhase = LifecyclePhase.TEST)
+public class XcodeTestMojo extends AbstractMojo {
+
+	/**
+	 * The location of the xcodebuild executable. Defaults to /usr/bin/xcodebuild.
+	 */
+	@Parameter(alias = &quot;xcodebuildPath&quot;, property = &quot;xcodebuild.path&quot;, defaultValue = &quot;/usr/bin/xcodebuild&quot;, required = true)
+	public String xcodebuild;
+	
+	/**
+	 * The path to your xcodeproj file. Defaults to ${basedir}/${project.artifactId}.xcodeproj.
+	 */
+	@Parameter(alias = &quot;project&quot;, property = &quot;xcode.project.path&quot;, defaultValue = &quot;${basedir}/${project.artifactId}.xcodeproj&quot;, required = true)
+	public String xcodeProject;
+	
+	/**
+	 * The name of the scheme to build. Defaults to ${project.artifactId}.
+	 */
+	@Parameter(alias = &quot;xcodeProjectTestScheme&quot;, property = &quot;xcode.project.test.scheme&quot;, defaultValue = &quot;${project.artifactId}&quot;, required = true)
+	public String xcodeScheme;
+	
+	@Parameter(property = &quot;project.build.directory&quot;, readonly = true, required = true)
+	public String targetDirectory;
+	
+	/**
+	 * Specifies whether or not to skip tests. Default value is false.
+	 */
+	@Parameter(alias = &quot;skipTests&quot;, property = &quot;skipTests&quot;, defaultValue = &quot;false&quot;, required = true)
+	public boolean skipTests;
+	
+	/**
+	 * Specifies whether or not to ignore test failures. Default value is false (it won't ignore failures).
+	 */
+	@Parameter(alias = &quot;ignoreTestFailures&quot;, property = &quot;xcode.ignore.test.failures&quot;, defaultValue = &quot;false&quot;, required = true)
+	public boolean ignoreFailures;
+	
+	@Parameter
+	public List&lt;String&gt; testSimulators;
+	
+	public ProcessRunner processRunner;
+	
+<span class="fc" id="L59">	public XcodeTestMojo() {</span>
+<span class="fc" id="L60">		this.processRunner = new ProcessRunner(getLog(), false);</span>
+<span class="fc" id="L61">	}</span>
+	
+	public void execute() throws MojoExecutionException, MojoFailureException {
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if (skipTests) {</span>
+<span class="fc" id="L65">			return;</span>
+		}
+<span class="fc" id="L67">		List&lt;String&gt; command = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L68">		command.add(xcodebuild);</span>
+<span class="fc" id="L69">		command.add(&quot;-project&quot;);</span>
+<span class="fc" id="L70">		command.add(xcodeProject);</span>
+<span class="fc" id="L71">		command.add(&quot;-scheme&quot;);</span>
+<span class="fc" id="L72">		command.add(xcodeScheme);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">		if (testSimulators == null) {</span>
+<span class="fc" id="L74">			testSimulators = new ArrayList&lt;String&gt;();</span>
+		}
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		if (testSimulators.isEmpty()) {</span>
+<span class="fc" id="L77">			testSimulators.add(&quot;iPhone 6&quot;);</span>
+		}
+<span class="fc bfc" id="L79" title="All 2 branches covered.">		for (String simulator : testSimulators) {</span>
+<span class="fc" id="L80">			command.add(&quot;-destination&quot;);</span>
+<span class="fc" id="L81">			command.add(&quot;platform=iOS Simulator,name=&quot; + simulator + &quot;&quot;);</span>
+<span class="fc" id="L82">		}</span>
+<span class="fc" id="L83">		command.add(&quot;test&quot;);</span>
+		
+<span class="fc" id="L85">		int resultCode = processRunner.runProcess(null, command.toArray(new String[command.size()]));</span>
+<span class="fc bfc" id="L86" title="All 4 branches covered.">		if (resultCode != 0 &amp;&amp; !ignoreFailures) {</span>
+<span class="fc" id="L87">			throw new MojoFailureException(&quot;There were test failures.&quot;);</span>
+		}
+<span class="fc" id="L89">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>
