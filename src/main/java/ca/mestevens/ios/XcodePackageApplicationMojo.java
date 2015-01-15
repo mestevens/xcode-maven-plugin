@@ -63,6 +63,18 @@ public class XcodePackageApplicationMojo extends AbstractMojo {
 	@Parameter(property = "project.build.directory", readonly = true, required = true)
 	public String targetDirectory;
 	
+	/**
+	 * Property to determine whether or not to build for the simulator.
+	 */
+	@Parameter(alias = "buildSimulator", property = "xcode.project.build.simulator", defaultValue = "true", required = false)
+	public boolean buildSimulator;
+	
+	/**
+	 * Property to determine whether or not to build for device.
+	 */
+	@Parameter(alias = "buildDevice", property = "xcode.project.build.device", defaultValue = "true", required = false)
+	public boolean buildDevice;
+	
 	public ProcessRunner processRunner;
 	
 	public XcodePackageApplicationMojo() {
@@ -71,16 +83,18 @@ public class XcodePackageApplicationMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		List<String> packageCommand = new ArrayList<String>();
-		packageCommand.add(xcrun);
-		packageCommand.add("-sdk");
-		packageCommand.add("iphoneos");
-		packageCommand.add("PackageApplication");
-		packageCommand.add("-v");
-		packageCommand.add(simulatorAppPath);
-		packageCommand.add("-o");
-		packageCommand.add(targetDirectory + "/" + ipaName);
-		processRunner.runProcess(targetDirectory, packageCommand.toArray(new String[packageCommand.size()]));
+		if (buildDevice) {
+			List<String> packageCommand = new ArrayList<String>();
+			packageCommand.add(xcrun);
+			packageCommand.add("-sdk");
+			packageCommand.add("iphoneos");
+			packageCommand.add("PackageApplication");
+			packageCommand.add("-v");
+			packageCommand.add(deviceAppPath);
+			packageCommand.add("-o");
+			packageCommand.add(targetDirectory + "/" + ipaName);
+			processRunner.runProcess(targetDirectory, packageCommand.toArray(new String[packageCommand.size()]));
+		}
 		if (deploy) {
 			int returnCode = processRunner.runProcess(targetDirectory, "ios-deploy", "-c");
 			if (returnCode == 127) {
@@ -88,36 +102,41 @@ public class XcodePackageApplicationMojo extends AbstractMojo {
 				if (returnCode == 127) {
 					returnCode = processRunner.runProcess(targetDirectory, "brew", "install", "node");
 					if (returnCode == 127) {
-						processRunner.runProcess(targetDirectory, "ruby", "-e", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"");
+						returnCode = processRunner.runProcess(targetDirectory, "ruby", "-e", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"");
+						if (returnCode == 127) {
+							throw new MojoFailureException("Could not run ruby to install brew. Please install ruby and try again.");
+						}
 						processRunner.runProcess(targetDirectory, "brew", "install", "node");
 					}
 					processRunner.runProcess(targetDirectory, "npm", "install", "-g", "ios-deploy");
 				}
 				returnCode = processRunner.runProcess(targetDirectory, "ios-deploy", "-c");
 			}
-			if (returnCode == 0) {
+			if (returnCode == 0 && buildDevice) {
 				processRunner.runProcess(targetDirectory, "ios-deploy", "-b", deviceAppPath);
 			} else {
-				List<String> instrumentsCommand = new ArrayList<String>();
-				instrumentsCommand.add(xcrun);
-				instrumentsCommand.add("instruments");
-				instrumentsCommand.add("-w");
-				instrumentsCommand.add(deployDevice);
-				processRunner.runProcess(targetDirectory, instrumentsCommand.toArray(new String[instrumentsCommand.size()]));
-				List<String> simctlInstallCommand = new ArrayList<String>();
-				simctlInstallCommand.add(xcrun);
-				simctlInstallCommand.add("simctl");
-				simctlInstallCommand.add("install");
-				simctlInstallCommand.add("booted");
-				simctlInstallCommand.add(simulatorAppPath);
-				processRunner.runProcess(targetDirectory, simctlInstallCommand.toArray(new String[simctlInstallCommand.size()]));
-				List<String> simctlLaunchCommand = new ArrayList<String>();
-				simctlLaunchCommand.add(xcrun);
-				simctlLaunchCommand.add("simctl");
-				simctlLaunchCommand.add("launch");
-				simctlLaunchCommand.add("booted");
-				simctlLaunchCommand.add(bundleId);
-				processRunner.runProcess(targetDirectory, simctlLaunchCommand.toArray(new String[simctlLaunchCommand.size()]));
+				if (buildSimulator) {
+					List<String> instrumentsCommand = new ArrayList<String>();
+					instrumentsCommand.add(xcrun);
+					instrumentsCommand.add("instruments");
+					instrumentsCommand.add("-w");
+					instrumentsCommand.add(deployDevice);
+					processRunner.runProcess(targetDirectory, instrumentsCommand.toArray(new String[instrumentsCommand.size()]));
+					List<String> simctlInstallCommand = new ArrayList<String>();
+					simctlInstallCommand.add(xcrun);
+					simctlInstallCommand.add("simctl");
+					simctlInstallCommand.add("install");
+					simctlInstallCommand.add("booted");
+					simctlInstallCommand.add(simulatorAppPath);
+					processRunner.runProcess(targetDirectory, simctlInstallCommand.toArray(new String[simctlInstallCommand.size()]));
+					List<String> simctlLaunchCommand = new ArrayList<String>();
+					simctlLaunchCommand.add(xcrun);
+					simctlLaunchCommand.add("simctl");
+					simctlLaunchCommand.add("launch");
+					simctlLaunchCommand.add("booted");
+					simctlLaunchCommand.add(bundleId);
+					processRunner.runProcess(targetDirectory, simctlLaunchCommand.toArray(new String[simctlLaunchCommand.size()]));
+				}
 			}
 		}
 	}
