@@ -80,7 +80,8 @@ public class XcodeProjectUtil {
 			//If the Embed Frameworks phase doesn't exist, create it
 			boolean foundExistingPhase = false;
 			for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {
-				if (copyFilesBuildPhase.getReference().getComment().equals("\"Embed Frameworks\"")) {
+				if (copyFilesBuildPhase.getName() != null && copyFilesBuildPhase.getName().equals("\"Embed Frameworks\"")) {
+				//if (copyFilesBuildPhase.getReference().getComment().equals("\"Embed Frameworks\"")) {
 					for(CommentedIdentifier identifier : copyIdentifiers) {
 						boolean foundFile = false;
 						for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {
