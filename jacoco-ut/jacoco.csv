@@ -6,5 +6,5 @@ xcode-maven-plugin,ca.mestevens.ios,XcodeTestMojo,0,114,0,12,0,24,0,8,0,2
 xcode-maven-plugin,ca.mestevens.ios,KeychainMojo,0,236,0,14,0,21,0,9,0,2
 xcode-maven-plugin,ca.mestevens.ios,XcodePackageApplicationMojo,376,0,18,0,51,0,11,0,2,0
 xcode-maven-plugin,ca.mestevens.ios,FrameworkDependenciesMojo,57,259,5,13,10,41,5,6,0,2
-xcode-maven-plugin,ca.mestevens.ios.utils,XcodeProjectUtil,164,618,35,81,11,128,32,37,8,3
+xcode-maven-plugin,ca.mestevens.ios.utils,XcodeProjectUtil,164,635,35,83,11,130,32,38,8,3
 xcode-maven-plugin,ca.mestevens.ios.utils,ProcessRunner,24,88,0,8,6,21,0,7,0,3
