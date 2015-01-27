@@ -80,139 +80,140 @@ public class XcodeProjectUtil {
 			//If the Embed Frameworks phase doesn't exist, create it
 <span class="fc" id="L81">			boolean foundExistingPhase = false;</span>
 <span class="fc bfc" id="L82" title="All 2 branches covered.">			for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {</span>
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">				if (copyFilesBuildPhase.getReference().getComment().equals(&quot;\&quot;Embed Frameworks\&quot;&quot;)) {</span>
-<span class="fc bfc" id="L84" title="All 2 branches covered.">					for(CommentedIdentifier identifier : copyIdentifiers) {</span>
-<span class="fc" id="L85">						boolean foundFile = false;</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">						for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {</span>
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">							if (fileIdentifier.getComment().equals(identifier.getComment())) {</span>
-<span class="fc" id="L88">								foundFile = true;</span>
+<span class="pc bpc" id="L83" title="2 of 4 branches missed.">				if (copyFilesBuildPhase.getName() != null &amp;&amp; copyFilesBuildPhase.getName().equals(&quot;\&quot;Embed Frameworks\&quot;&quot;)) {</span>
+				//if (copyFilesBuildPhase.getReference().getComment().equals(&quot;\&quot;Embed Frameworks\&quot;&quot;)) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">					for(CommentedIdentifier identifier : copyIdentifiers) {</span>
+<span class="fc" id="L86">						boolean foundFile = false;</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">						for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">							if (fileIdentifier.getComment().equals(identifier.getComment())) {</span>
+<span class="fc" id="L89">								foundFile = true;</span>
 							}
-<span class="fc" id="L90">						}</span>
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">						if (!foundFile) {</span>
-<span class="nc" id="L92">							copyFilesBuildPhase.getFiles().add(identifier);</span>
+<span class="fc" id="L91">						}</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">						if (!foundFile) {</span>
+<span class="nc" id="L93">							copyFilesBuildPhase.getFiles().add(identifier);</span>
 						}
-<span class="fc" id="L94">					}</span>
-<span class="fc" id="L95">					foundExistingPhase = true;</span>
+<span class="fc" id="L95">					}</span>
+<span class="fc" id="L96">					foundExistingPhase = true;</span>
 				}
-<span class="fc" id="L97">			}</span>
+<span class="fc" id="L98">			}</span>
 			//Grab the first target
-<span class="fc" id="L99">			String firstTargetIdentifier = xcodeProject.getProject().getTargets().get(0).getIdentifier();</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">			if (!foundExistingPhase) {</span>
-<span class="fc" id="L101">				xcodeProject.addCopyFilesBuildPhase(firstTargetIdentifier, copyFrameworksBuildPhase);</span>
+<span class="fc" id="L100">			String firstTargetIdentifier = xcodeProject.getProject().getTargets().get(0).getIdentifier();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">			if (!foundExistingPhase) {</span>
+<span class="fc" id="L102">				xcodeProject.addCopyFilesBuildPhase(firstTargetIdentifier, copyFrameworksBuildPhase);</span>
 			}
 			//Get the configuration list identifier for the first target
-<span class="fc" id="L104">			String existingFrameworksPhaseId = null;</span>
-<span class="fc" id="L105">			String buildConfigurationList = null;</span>
-<span class="fc" id="L106">			PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(firstTargetIdentifier);</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">			for(CommentedIdentifier buildPhaseIdentifier : nativeTarget.getBuildPhases()) {</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">				if (buildPhaseIdentifier.getComment().equals(&quot;Frameworks&quot;)) {</span>
-<span class="fc" id="L109">					existingFrameworksPhaseId = buildPhaseIdentifier.getIdentifier();</span>
-<span class="fc" id="L110">					buildConfigurationList = nativeTarget.getBuildConfigurationList().getIdentifier();</span>
-<span class="fc" id="L111">					break;</span>
+<span class="fc" id="L105">			String existingFrameworksPhaseId = null;</span>
+<span class="fc" id="L106">			String buildConfigurationList = null;</span>
+<span class="fc" id="L107">			PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(firstTargetIdentifier);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">			for(CommentedIdentifier buildPhaseIdentifier : nativeTarget.getBuildPhases()) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">				if (buildPhaseIdentifier.getComment().equals(&quot;Frameworks&quot;)) {</span>
+<span class="fc" id="L110">					existingFrameworksPhaseId = buildPhaseIdentifier.getIdentifier();</span>
+<span class="fc" id="L111">					buildConfigurationList = nativeTarget.getBuildConfigurationList().getIdentifier();</span>
+<span class="fc" id="L112">					break;</span>
 				}
-<span class="fc" id="L113">			}</span>
+<span class="fc" id="L114">			}</span>
 			//Add the framework build files to the frameworks build phase
-<span class="fc" id="L115">			PBXBuildPhase frameworksBuildPhase = xcodeProject.getFrameworksBuildPhaseWithIdentifier(existingFrameworksPhaseId);</span>
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">			if (frameworksBuildPhase.getReference().getIdentifier().equals(existingFrameworksPhaseId)) {</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">				for(CommentedIdentifier identifier : frameworkIdentifiers) {</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">					if (!frameworksBuildPhase.getFiles().contains(identifier)) {</span>
-<span class="fc" id="L119">						frameworksBuildPhase.getFiles().add(identifier);</span>
+<span class="fc" id="L116">			PBXBuildPhase frameworksBuildPhase = xcodeProject.getFrameworksBuildPhaseWithIdentifier(existingFrameworksPhaseId);</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">			if (frameworksBuildPhase.getReference().getIdentifier().equals(existingFrameworksPhaseId)) {</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">				for(CommentedIdentifier identifier : frameworkIdentifiers) {</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">					if (!frameworksBuildPhase.getFiles().contains(identifier)) {</span>
+<span class="fc" id="L120">						frameworksBuildPhase.getFiles().add(identifier);</span>
 					}
-<span class="fc" id="L121">				}</span>
+<span class="fc" id="L122">				}</span>
 			}
 			//Add the properties to the build configuration
-<span class="fc" id="L124">			XCConfigurationList configuration = xcodeProject.getConfigurationListWithIdentifier(buildConfigurationList);</span>
-<span class="fc bfc" id="L125" title="All 2 branches covered.">			for(CommentedIdentifier identifier : configuration.getBuildConfigurations()) {</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">				if (containsFrameworks) {</span>
+<span class="fc" id="L125">			XCConfigurationList configuration = xcodeProject.getConfigurationListWithIdentifier(buildConfigurationList);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">			for(CommentedIdentifier identifier : configuration.getBuildConfigurations()) {</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">				if (containsFrameworks) {</span>
 					//FRAMEWORK_SEARCH_PATHS
-<span class="fc" id="L128">					List&lt;String&gt; frameworkSearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;);</span>
-<span class="fc bfc" id="L129" title="All 2 branches covered.">					if (frameworkSearchPaths != null) {</span>
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">						if (!frameworkSearchPaths.contains(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;)) {</span>
-<span class="nc" id="L131">							frameworkSearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;);</span>
-<span class="nc" id="L132">							xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;, frameworkSearchPaths);</span>
+<span class="fc" id="L129">					List&lt;String&gt; frameworkSearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">					if (frameworkSearchPaths != null) {</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">						if (!frameworkSearchPaths.contains(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;)) {</span>
+<span class="nc" id="L132">							frameworkSearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;);</span>
+<span class="nc" id="L133">							xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;, frameworkSearchPaths);</span>
 						}
 					} else {
-<span class="fc" id="L135">						frameworkSearchPaths = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L136">						frameworkSearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;);</span>
-<span class="fc" id="L137">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;, frameworkSearchPaths);</span>
+<span class="fc" id="L136">						frameworkSearchPaths = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L137">						frameworkSearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;);</span>
+<span class="fc" id="L138">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;, frameworkSearchPaths);</span>
 					}
 					//LD_RUNPATH_SEARCH_PATHS
-<span class="fc" id="L140">					String ldRunpathSearchPaths = xcodeProject.getBuildConfigurationProperty(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;);</span>
-<span class="fc bfc" id="L141" title="All 2 branches covered.">					if (ldRunpathSearchPaths != null) {</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">						if (ldRunpathSearchPaths.startsWith(&quot;\&quot;&quot;)) {</span>
-<span class="fc" id="L143">							ldRunpathSearchPaths = ldRunpathSearchPaths.substring(1);</span>
+<span class="fc" id="L141">					String ldRunpathSearchPaths = xcodeProject.getBuildConfigurationProperty(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">					if (ldRunpathSearchPaths != null) {</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">						if (ldRunpathSearchPaths.startsWith(&quot;\&quot;&quot;)) {</span>
+<span class="fc" id="L144">							ldRunpathSearchPaths = ldRunpathSearchPaths.substring(1);</span>
 						}
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">						if (ldRunpathSearchPaths.endsWith(&quot;\&quot;&quot;)) {</span>
-<span class="fc" id="L146">							ldRunpathSearchPaths = ldRunpathSearchPaths.substring(0, ldRunpathSearchPaths.length() - 1);</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">						if (ldRunpathSearchPaths.endsWith(&quot;\&quot;&quot;)) {</span>
+<span class="fc" id="L147">							ldRunpathSearchPaths = ldRunpathSearchPaths.substring(0, ldRunpathSearchPaths.length() - 1);</span>
 						}
-<span class="fc" id="L148">						ldRunpathSearchPaths = ldRunpathSearchPaths.trim();</span>
-<span class="fc bfc" id="L149" title="All 2 branches covered.">						if (!ldRunpathSearchPaths.contains(&quot;@loader_path/Frameworks&quot;)) {</span>
-<span class="fc" id="L150">							ldRunpathSearchPaths = ldRunpathSearchPaths.concat(&quot; @loader_path/Frameworks&quot;);</span>
+<span class="fc" id="L149">						ldRunpathSearchPaths = ldRunpathSearchPaths.trim();</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">						if (!ldRunpathSearchPaths.contains(&quot;@loader_path/Frameworks&quot;)) {</span>
+<span class="fc" id="L151">							ldRunpathSearchPaths = ldRunpathSearchPaths.concat(&quot; @loader_path/Frameworks&quot;);</span>
 						}
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">						if (!ldRunpathSearchPaths.contains(&quot;@executable_path/Frameworks&quot;)) {</span>
-<span class="nc" id="L153">							ldRunpathSearchPaths = ldRunpathSearchPaths.concat(&quot; @executable_path/Frameworks&quot;);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">						if (!ldRunpathSearchPaths.contains(&quot;@executable_path/Frameworks&quot;)) {</span>
+<span class="nc" id="L154">							ldRunpathSearchPaths = ldRunpathSearchPaths.concat(&quot; @executable_path/Frameworks&quot;);</span>
 						}
-<span class="fc" id="L155">						ldRunpathSearchPaths = &quot;\&quot;&quot; + ldRunpathSearchPaths + &quot;\&quot;&quot;;</span>
-<span class="fc" id="L156">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, ldRunpathSearchPaths);</span>
+<span class="fc" id="L156">						ldRunpathSearchPaths = &quot;\&quot;&quot; + ldRunpathSearchPaths + &quot;\&quot;&quot;;</span>
+<span class="fc" id="L157">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, ldRunpathSearchPaths);</span>
 					} else {
-<span class="fc" id="L158">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, &quot;\&quot;@loader_path/Frameworks @executable_path/Frameworks\&quot;&quot;);</span>
+<span class="fc" id="L159">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, &quot;\&quot;@loader_path/Frameworks @executable_path/Frameworks\&quot;&quot;);</span>
 					}
 				}
-<span class="fc bfc" id="L161" title="All 2 branches covered.">				if (containsLibraries) {</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">				if (containsLibraries) {</span>
 					//HEADER_SEARCH_PATHS
-<span class="fc" id="L163">					List&lt;String&gt; headerSearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), &quot;HEADER_SEARCH_PATHS&quot;);</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">					if (headerSearchPaths == null) {</span>
-<span class="fc" id="L165">						headerSearchPaths = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L164">					List&lt;String&gt; headerSearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), &quot;HEADER_SEARCH_PATHS&quot;);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">					if (headerSearchPaths == null) {</span>
+<span class="fc" id="L166">						headerSearchPaths = new ArrayList&lt;String&gt;();</span>
 					}
-<span class="fc bfc" id="L167" title="All 2 branches covered.">					if (!headerSearchPaths.contains(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;)) {</span>
-<span class="fc" id="L168">						headerSearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
-<span class="fc" id="L169">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;HEADER_SEARCH_PATHS&quot;, headerSearchPaths);</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">					if (!headerSearchPaths.contains(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;)) {</span>
+<span class="fc" id="L169">						headerSearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
+<span class="fc" id="L170">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;HEADER_SEARCH_PATHS&quot;, headerSearchPaths);</span>
 					}
 					//LIBRARY_SEARCH_PATHS
-<span class="fc" id="L172">					List&lt;String&gt; librarySearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), &quot;LIBRARY_SEARCH_PATHS&quot;);</span>
-<span class="fc bfc" id="L173" title="All 2 branches covered.">					if (librarySearchPaths == null) {</span>
-<span class="fc" id="L174">						librarySearchPaths = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L173">					List&lt;String&gt; librarySearchPaths = xcodeProject.getBuildConfigurationPropertyAsList(identifier.getIdentifier(), &quot;LIBRARY_SEARCH_PATHS&quot;);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">					if (librarySearchPaths == null) {</span>
+<span class="fc" id="L175">						librarySearchPaths = new ArrayList&lt;String&gt;();</span>
 					}
-<span class="fc bfc" id="L176" title="All 2 branches covered.">					if (!librarySearchPaths.contains(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;)) {</span>
-<span class="fc" id="L177">						librarySearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
-<span class="fc" id="L178">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;LIBRARY_SEARCH_PATHS&quot;, librarySearchPaths);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">					if (!librarySearchPaths.contains(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;)) {</span>
+<span class="fc" id="L178">						librarySearchPaths.add(&quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
+<span class="fc" id="L179">						xcodeProject.setBuildConfigurationProperty(identifier.getIdentifier(), &quot;LIBRARY_SEARCH_PATHS&quot;, librarySearchPaths);</span>
 					}
 				}
-<span class="fc" id="L181">			}</span>
+<span class="fc" id="L182">			}</span>
 			//Add/Edit the Frameworks group
-<span class="fc" id="L183">			String frameworkGroupIdentifier = null;</span>
-<span class="fc bfc" id="L184" title="All 2 branches covered.">			for(PBXFileElement group : xcodeProject.getGroups()) {</span>
-<span class="pc bpc" id="L185" title="1 of 6 branches missed.">				if (group.getName() != null &amp;&amp; (group.getName().equals(&quot;Frameworks&quot;) || group.getName().equals(&quot;\&quot;Frameworks\&quot;&quot;))) {</span>
-<span class="fc" id="L186">					frameworkGroupIdentifier = group.getReference().getIdentifier();</span>
+<span class="fc" id="L184">			String frameworkGroupIdentifier = null;</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">			for(PBXFileElement group : xcodeProject.getGroups()) {</span>
+<span class="pc bpc" id="L186" title="1 of 6 branches missed.">				if (group.getName() != null &amp;&amp; (group.getName().equals(&quot;Frameworks&quot;) || group.getName().equals(&quot;\&quot;Frameworks\&quot;&quot;))) {</span>
+<span class="fc" id="L187">					frameworkGroupIdentifier = group.getReference().getIdentifier();</span>
 				}
-<span class="fc" id="L188">			}</span>
-<span class="fc" id="L189">			PBXFileElement frameworkGroup = null;</span>
-<span class="fc bfc" id="L190" title="All 2 branches covered.">			if (frameworkGroupIdentifier != null) {</span>
-<span class="fc" id="L191">				frameworkGroup = xcodeProject.getGroupWithIdentifier(frameworkGroupIdentifier);</span>
+<span class="fc" id="L189">			}</span>
+<span class="fc" id="L190">			PBXFileElement frameworkGroup = null;</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">			if (frameworkGroupIdentifier != null) {</span>
+<span class="fc" id="L192">				frameworkGroup = xcodeProject.getGroupWithIdentifier(frameworkGroupIdentifier);</span>
 			} else {
-<span class="fc" id="L193">				String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();</span>
-<span class="fc" id="L194">				frameworkGroup = xcodeProject.createGroup(&quot;Frameworks&quot;, mainGroupIdentifier);</span>
+<span class="fc" id="L194">				String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();</span>
+<span class="fc" id="L195">				frameworkGroup = xcodeProject.createGroup(&quot;Frameworks&quot;, mainGroupIdentifier);</span>
 			}
-<span class="fc bfc" id="L196" title="All 2 branches covered.">			for (CommentedIdentifier fileReference : fileReferenceIdentifiers) {</span>
-<span class="fc" id="L197">				boolean found = false;</span>
-<span class="fc bfc" id="L198" title="All 2 branches covered.">				for (CommentedIdentifier child : frameworkGroup.getChildren()) {</span>
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">					if (child.getComment().equals(fileReference.getComment())) {</span>
-<span class="fc" id="L200">						found = true;</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">			for (CommentedIdentifier fileReference : fileReferenceIdentifiers) {</span>
+<span class="fc" id="L198">				boolean found = false;</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">				for (CommentedIdentifier child : frameworkGroup.getChildren()) {</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">					if (child.getComment().equals(fileReference.getComment())) {</span>
+<span class="fc" id="L201">						found = true;</span>
 					}
-<span class="fc" id="L202">				}</span>
-<span class="fc bfc" id="L203" title="All 2 branches covered.">				if (!found) {</span>
-<span class="fc" id="L204">					frameworkGroup.addChild(fileReference);</span>
+<span class="fc" id="L203">				}</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">				if (!found) {</span>
+<span class="fc" id="L205">					frameworkGroup.addChild(fileReference);</span>
 				}
-<span class="fc" id="L206">			}</span>
-<span class="nc" id="L207">		} catch (Exception ex) {</span>
-<span class="nc" id="L208">			ex.printStackTrace();</span>
-<span class="nc" id="L209">			throw new MojoExecutionException(ex.getMessage());</span>
-<span class="fc" id="L210">		}</span>
-<span class="fc" id="L211">	}</span>
+<span class="fc" id="L207">			}</span>
+<span class="nc" id="L208">		} catch (Exception ex) {</span>
+<span class="nc" id="L209">			ex.printStackTrace();</span>
+<span class="nc" id="L210">			throw new MojoExecutionException(ex.getMessage());</span>
+<span class="fc" id="L211">		}</span>
+<span class="fc" id="L212">	}</span>
 	
 	public void writeProject() throws IOException {
-<span class="nc" id="L214">		Files.write(Paths.get(pbxProjLocation), xcodeProject.toString().getBytes());</span>
-<span class="nc" id="L215">	}</span>
+<span class="nc" id="L215">		Files.write(Paths.get(pbxProjLocation), xcodeProject.toString().getBytes());</span>
+<span class="nc" id="L216">	}</span>
 	
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>
