@@ -46,12 +46,15 @@ public class XcodeProjectUtil {
 					fileReference = xcodeProject.createFileReference(frameworkPath, "SOURCE_ROOT");
 				}
 				List<PBXBuildFile> buildFiles = xcodeProject.getBuildFileWithFileRefPath(frameworkPath);
+				if (buildFiles.isEmpty()) {
+					buildFiles = xcodeProject.getBuildFileWithFileRefPath("\"" + frameworkPath + "\"");
+				}
 				PBXBuildFile buildFile = null;
 				PBXBuildFile copyBuildFile = null;
 				for (PBXBuildFile existingFile : buildFiles) {
-					if (existingFile.getReference().getComment().equals(dependencyFile.getName() + " in Frameworks")) {
+					if (existingFile.getReference().getComment().contains(dependencyFile.getName() + " in Frameworks")) {
 						buildFile = existingFile;
-					} else if (existingFile.getReference().getComment().equals(dependencyFile.getName() + " in Embed Frameworks")) {
+					} else if (existingFile.getReference().getComment().contains(dependencyFile.getName() + " in Embed Frameworks")) {
 						copyBuildFile = existingFile;
 					}
 				}
