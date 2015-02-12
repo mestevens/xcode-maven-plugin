@@ -1,5 +1,9 @@
 package ca.mestevens.ios;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -18,15 +22,11 @@ import ca.mestevens.ios.utils.CopyDependenciesUtil;
 import ca.mestevens.ios.utils.ProcessRunner;
 import ca.mestevens.ios.utils.XcodeProjectUtil;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Goal which generates your framework dependencies in the target directory.
  */
-@Mojo(name = "framework-dependencies", defaultPhase = LifecyclePhase.PROCESS_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class FrameworkDependenciesMojo extends AbstractMojo {
+@Mojo(name = "xcode-process-test-sources", defaultPhase = LifecyclePhase.PROCESS_TEST_SOURCES, requiresDependencyResolution = ResolutionScope.TEST)
+public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 
 	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
@@ -65,12 +65,6 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	public String xcodeProject;
 	
 	/**
-	 * The targets to add dependencies to. Defaults to only ${project.artifactId}.
-	 */
-	@Parameter
-	public List<String> dependencyTargets;
-	
-	/**
 	 * The targets to add test dependencies to. Defaults to only ${project.artifactId}Tests.
 	 */
 	@Parameter
@@ -79,7 +73,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	public ProcessRunner processRunner;
 	public CopyDependenciesUtil copyDependenciesUtil;
 	
-	public FrameworkDependenciesMojo() {
+	public XcodeProcessTestSourcesMojo() {
 		this.processRunner = new ProcessRunner(getLog());
 	}
 
@@ -88,19 +82,11 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 		
 		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);
 		
-		List<File> dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
+		List<File> dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.TEST);
+		System.out.println(dependencyFiles);
 		if (addDependencies) {
 			try {
 				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
-				if (dependencyTargets == null) {
-					dependencyTargets = new ArrayList<String>();
-				}
-				if (dependencyTargets.isEmpty()) {
-					dependencyTargets.add(project.getArtifactId());
-				}
-				for (String target : dependencyTargets) {
-					projectUtil.addDependenciesToTarget(target, dependencyFiles);
-				}
 				if (addTestDependencies) {
 					if (dependencyTestTargets == null) {
 						dependencyTestTargets = new ArrayList<String>();

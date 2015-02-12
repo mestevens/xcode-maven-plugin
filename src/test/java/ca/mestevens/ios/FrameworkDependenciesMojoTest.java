@@ -118,10 +118,4 @@ public class FrameworkDependenciesMojoTest {
 		dependenciesMojo.execute();
 	}
 	
-	@Test(expectedExceptions = MojoFailureException.class)
-	public void testDependencyResolutionException() throws MojoExecutionException, MojoFailureException, DependencyResolutionException {
-		when(mockRepoSystem.resolveDependencies(eq(mockRepoSession), any(DependencyRequest.class))).thenThrow(new DependencyResolutionException(null, null));
-		dependenciesMojo.execute();
-	}
-	
 }

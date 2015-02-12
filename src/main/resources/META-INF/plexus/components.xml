@@ -47,12 +47,17 @@
 						<id>default</id>
 						<phases>
 							<initialize>
-								ca.mestevens.ios:xcode-maven-plugin:set-keychain,
-								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:set-keychain
 							</initialize>
+							<process-sources>
+								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+							</process-sources>
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build
 							</compile>
+							<process-test-sources>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-test-sources
+							</process-test-sources>
 							<package>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-package-framework
 							</package>
@@ -89,12 +94,17 @@
 						<id>default</id>
 						<phases>
 							<initialize>
-								ca.mestevens.ios:xcode-maven-plugin:set-keychain,
-								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:set-keychain
 							</initialize>
+							<process-sources>
+								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+							</process-sources>
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build
 							</compile>
+							<process-test-sources>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-test-sources
+							</process-test-sources>
 							<package>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-package-framework
 							</package>
@@ -131,12 +141,17 @@
 						<id>default</id>
 						<phases>
 							<initialize>
-								ca.mestevens.ios:xcode-maven-plugin:set-keychain,
-								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:set-keychain
 							</initialize>
+							<process-sources>
+								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+							</process-sources>
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build
 							</compile>
+							<process-test-sources>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-test-sources
+							</process-test-sources>
 							<test>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-test
 							</test>
