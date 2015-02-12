@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CopyDependenciesUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">xcode-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">ca.mestevens.ios.utils</a> &gt; <span class="el_source">CopyDependenciesUtil.java</span></div><h1>CopyDependenciesUtil.java</h1><pre class="source lang-java linenums">package ca.mestevens.ios.utils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
+
+public class CopyDependenciesUtil {
+	
+	private final MavenProject project;
+	private final Log log;
+	private final ProcessRunner processRunner;
+	
+<span class="fc" id="L21">	public CopyDependenciesUtil(MavenProject project, Log log, ProcessRunner processRunner) {</span>
+<span class="fc" id="L22">		this.project = project;</span>
+<span class="fc" id="L23">		this.log = log;</span>
+<span class="fc" id="L24">		this.processRunner = processRunner;</span>
+<span class="fc" id="L25">	}</span>
+	
+	public List&lt;File&gt; copyDependencies(final String scope) throws MojoFailureException {
+<span class="fc" id="L28">		log.info(&quot;Starting execution&quot;);</span>
+		
+<span class="fc" id="L30">		Set&lt;Artifact&gt; artifacts = project.getArtifacts();</span>
+<span class="fc" id="L31">		List&lt;File&gt; dependencyFiles = new ArrayList&lt;File&gt;();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">		for (Artifact artifact : artifacts) {</span>
+<span class="fc" id="L33">			String type = artifact.getType();</span>
+<span class="fc bfc" id="L34" title="All 4 branches covered.">			if (&quot;xcode-framework&quot;.equals(type) || &quot;xcode-library&quot;.equals(type)) {</span>
+				try {
+					// Get File from result artifact
+<span class="fc" id="L37">					File file = artifact.getFile();</span>
+<span class="fc" id="L38">					String resultFileName = project.getBuild().getDirectory() + &quot;/xcode-dependencies/&quot;;</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">					if (type.equals(&quot;xcode-framework&quot;)) {</span>
+<span class="fc" id="L40">						resultFileName += &quot;frameworks&quot;;</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">					} else if (type.equals(&quot;xcode-library&quot;)) {</span>
+<span class="fc" id="L42">						resultFileName += &quot;libraries&quot;;</span>
+					}
+<span class="fc" id="L44">					resultFileName += &quot;/&quot; + artifact.getGroupId() + &quot;/&quot; + artifact.getArtifactId();</span>
+<span class="fc" id="L45">					File resultFile = new File(resultFileName);</span>
+					
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">					if (resultFile.exists()) {</span>
+<span class="nc" id="L48">						FileUtils.deleteDirectory(resultFile);</span>
+					}
+					
+<span class="fc" id="L51">					FileUtils.mkdir(resultFile.getAbsolutePath());</span>
+					
+<span class="fc" id="L53">					processRunner.runProcess(null, &quot;unzip&quot;, file.getAbsolutePath(), &quot;-d&quot;, resultFile.getAbsolutePath());</span>
+					
+<span class="fc bfc" id="L55" title="All 2 branches covered.">					if (type.equals(&quot;xcode-framework&quot;)) {</span>
+<span class="fc" id="L56">						dependencyFiles.add(new File(resultFile.getAbsolutePath() + &quot;/&quot; + artifact.getArtifactId() + &quot;.framework&quot;));</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">					} else if (type.equals(&quot;xcode-library&quot;)) {</span>
+<span class="fc" id="L58">						dependencyFiles.add(new File(resultFile.getAbsolutePath() + &quot;/lib&quot; + artifact.getArtifactId() + &quot;.a&quot;));</span>
+					}
+					
+<span class="nc" id="L61">				} catch (IOException e) {</span>
+<span class="nc" id="L62">					log.error(&quot;Problem creating/deleting framework file: &quot; + artifact.getArtifactId());</span>
+<span class="nc" id="L63">					log.error(e.getMessage());</span>
+<span class="nc" id="L64">					throw new MojoFailureException(&quot;Problem creating/deleting framework file: &quot; + artifact.getArtifactId());</span>
+<span class="fc" id="L65">				}</span>
+			}
+<span class="fc" id="L67">		}</span>
+		
+<span class="fc" id="L69">		return dependencyFiles;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>
