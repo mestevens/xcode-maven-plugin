@@ -31,7 +31,7 @@ public class XcodeProjectUtil {
 		this.xcodeProject = new XCodeProject(pbxProjLocation);
 	}
 
-	public void addDependencies(List<File> dependencyFiles) throws MojoExecutionException {
+	public void addDependenciesToTarget(String targetName, List<File> dependencyFiles) throws MojoExecutionException {
 		try {
 			List<CommentedIdentifier> frameworkIdentifiers = new ArrayList<CommentedIdentifier>();
 			List<CommentedIdentifier> fileReferenceIdentifiers = new ArrayList<CommentedIdentifier>();
@@ -79,12 +79,26 @@ public class XcodeProjectUtil {
 					copyIdentifiers.add(copyBuildFile.getReference());
 				}
 			}
-			PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase("PBXCopyFilesBuildPhase", "\"Embed Frameworks\"", copyIdentifiers, "\"\"", 10);
+			//Grab the first target
+			String targetIdentifier = "";
+			String copyFrameworksBuildPhaseIdentifier = "";
+			for (PBXTarget target : xcodeProject.getNativeTargets()) {
+				if (target.getName() != null && target.getName().equals(targetName)) {
+					targetIdentifier = target.getReference().getIdentifier();
+					for(CommentedIdentifier buildPhase : target.getBuildPhases()) {
+						if (buildPhase.getComment().contains("Embed Frameworks")) {
+							copyFrameworksBuildPhaseIdentifier = buildPhase.getIdentifier();
+						}
+					}
+				}
+			}
+			if (targetIdentifier.equals("")) {
+				return;
+			}
 			//If the Embed Frameworks phase doesn't exist, create it
 			boolean foundExistingPhase = false;
 			for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {
-				if (copyFilesBuildPhase.getName() != null && copyFilesBuildPhase.getName().equals("\"Embed Frameworks\"")) {
-				//if (copyFilesBuildPhase.getReference().getComment().equals("\"Embed Frameworks\"")) {
+				if (copyFilesBuildPhase.getReference().getIdentifier().equals(copyFrameworksBuildPhaseIdentifier)) {
 					for(CommentedIdentifier identifier : copyIdentifiers) {
 						boolean foundFile = false;
 						for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {
@@ -99,15 +113,14 @@ public class XcodeProjectUtil {
 					foundExistingPhase = true;
 				}
 			}
-			//Grab the first target
-			String firstTargetIdentifier = xcodeProject.getProject().getTargets().get(0).getIdentifier();
 			if (!foundExistingPhase) {
-				xcodeProject.addCopyFilesBuildPhase(firstTargetIdentifier, copyFrameworksBuildPhase);
+				PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase("PBXCopyFilesBuildPhase", "\"Embed Frameworks\"", copyIdentifiers, "\"\"", 10);
+				xcodeProject.addCopyFilesBuildPhase(targetIdentifier, copyFrameworksBuildPhase);
 			}
 			//Get the configuration list identifier for the first target
 			String existingFrameworksPhaseId = null;
 			String buildConfigurationList = null;
-			PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(firstTargetIdentifier);
+			PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(targetIdentifier);
 			for(CommentedIdentifier buildPhaseIdentifier : nativeTarget.getBuildPhases()) {
 				if (buildPhaseIdentifier.getComment().equals("Frameworks")) {
 					existingFrameworksPhaseId = buildPhaseIdentifier.getIdentifier();
