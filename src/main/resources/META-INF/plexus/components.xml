@@ -50,7 +50,7 @@
 								ca.mestevens.ios:xcode-maven-plugin:set-keychain
 							</initialize>
 							<process-sources>
-								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-sources
 							</process-sources>
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build
@@ -97,7 +97,7 @@
 								ca.mestevens.ios:xcode-maven-plugin:set-keychain
 							</initialize>
 							<process-sources>
-								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-sources
 							</process-sources>
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build
@@ -144,7 +144,7 @@
 								ca.mestevens.ios:xcode-maven-plugin:set-keychain
 							</initialize>
 							<process-sources>
-								ca.mestevens.ios:xcode-maven-plugin:framework-dependencies
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-sources
 							</process-sources>
 							<compile>
 								ca.mestevens.ios:xcode-maven-plugin:xcode-build

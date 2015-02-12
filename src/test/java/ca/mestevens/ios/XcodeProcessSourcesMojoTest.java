@@ -29,7 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Test(groups = "automated")
-public class FrameworkDependenciesMojoTest {
+public class XcodeProcessSourcesMojoTest {
 	
 	public MavenProject mockProject;
     public List<RemoteRepository> mockProjectRepos;
@@ -39,7 +39,7 @@ public class FrameworkDependenciesMojoTest {
 	public final String xcodeProjectName = "test-project-name";
 	public ProcessRunner mockProcessRunner;
 	public Log mockLog;
-	public FrameworkDependenciesMojo dependenciesMojo;
+	public XcodeProcessSourcesMojo dependenciesMojo;
 
 	@BeforeMethod
 	public void setUp() throws DependencyResolutionException, MojoFailureException {
@@ -50,7 +50,7 @@ public class FrameworkDependenciesMojoTest {
 		mockProcessRunner = mock(ProcessRunner.class);
 		mockLog = mock(Log.class);
 		mockProcessRunner.log = mockLog;
-		dependenciesMojo = new FrameworkDependenciesMojo();
+		dependenciesMojo = new XcodeProcessSourcesMojo();
 		dependenciesMojo.processRunner = mockProcessRunner;
 		dependenciesMojo.xcodeProject = xcodeProjectName;
 		dependenciesMojo.addDependencies = addDependencies;

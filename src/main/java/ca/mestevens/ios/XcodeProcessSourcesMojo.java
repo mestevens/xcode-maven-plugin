@@ -25,8 +25,8 @@ import java.util.List;
 /**
  * Goal which generates your framework dependencies in the target directory.
  */
-@Mojo(name = "framework-dependencies", defaultPhase = LifecyclePhase.PROCESS_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
-public class FrameworkDependenciesMojo extends AbstractMojo {
+@Mojo(name = "xcode-process-sources", defaultPhase = LifecyclePhase.PROCESS_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
+public class XcodeProcessSourcesMojo extends AbstractMojo {
 
 	@Parameter(property = "project", readonly = true, required = true)
 	public MavenProject project;
@@ -79,7 +79,7 @@ public class FrameworkDependenciesMojo extends AbstractMojo {
 	public ProcessRunner processRunner;
 	public CopyDependenciesUtil copyDependenciesUtil;
 	
-	public FrameworkDependenciesMojo() {
+	public XcodeProcessSourcesMojo() {
 		this.processRunner = new ProcessRunner(getLog());
 	}
 
