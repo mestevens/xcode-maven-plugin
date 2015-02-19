@@ -49,6 +49,7 @@ public class XcodeBuildMojoTest {
 		buildMojo.targetDirectory = target;
 		buildMojo.buildDevice = true;
 		buildMojo.buildSimulator = true;
+		buildMojo.forceCodeSigning = true;
 	}
 	
 	@AfterMethod

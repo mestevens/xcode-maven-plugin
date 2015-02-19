@@ -146,6 +146,9 @@ public class XcodeBuildMojo extends AbstractMojo {
 	@Parameter(alias = "buildDevice", property = "xcode.project.build.device", defaultValue = "true", required = false)
 	public boolean buildDevice;
 	
+	@Parameter(alias = "forceCodeSigning", property = "xcode.project.force.code.signing", defaultValue = "false", required = false)
+	public boolean forceCodeSigning;
+	
 	public ProcessRunner processRunner;
 	
 	public XcodeBuildMojo() {
@@ -194,6 +197,9 @@ public class XcodeBuildMojo extends AbstractMojo {
 			}
 			int returnValue = 0;
 			List<String> buildCommands = createCommonBuildCommands();
+			if (!forceCodeSigning) {
+				buildCommands.add("CODE_SIGNING_REQUIRED=NO");
+			}
 			if (buildSimulator) {
 				for (String simulatorArch : simulatorArchs) {
 					List<String> simulatorBuildCommands = new ArrayList<String>(buildCommands);
