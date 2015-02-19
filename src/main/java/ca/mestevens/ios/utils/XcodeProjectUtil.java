@@ -83,7 +83,7 @@ public class XcodeProjectUtil {
 			String targetIdentifier = "";
 			String copyFrameworksBuildPhaseIdentifier = "";
 			for (PBXTarget target : xcodeProject.getNativeTargets()) {
-				if (target.getName() != null && target.getName().equals(targetName)) {
+				if (target.getName() != null && (target.getName().equals(targetName) || target.getName().equals("\"" + targetName + "\""))) {
 					targetIdentifier = target.getReference().getIdentifier();
 					for(CommentedIdentifier buildPhase : target.getBuildPhases()) {
 						if (buildPhase.getComment().contains("Embed Frameworks")) {
