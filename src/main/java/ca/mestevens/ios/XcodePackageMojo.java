@@ -46,7 +46,7 @@ public class XcodePackageMojo extends AbstractMojo {
 			String packagedFileName = artifactName + "." + packaging;
 			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
 			List<String> inputFiles = new ArrayList<String>();
-			if (packaging.equals("xcode-framework")) {
+			if (packaging.equals("xcode-dynamic-framework") || packaging.equals("xcode-static-framework")) {
 				inputFiles.add(artifactName + ".framework");
 			} else {
 				inputFiles.add("lib" + artifactName + ".a");

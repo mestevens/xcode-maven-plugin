@@ -92,7 +92,7 @@ public class CopyDependenciesUtilTest {
 		mockArtifacts.add(mockLibraryArtifact);
 		File mockFrameworkFile = mock(File.class);
 		File mockLibraryFile = mock(File.class);
-		when(mockFrameworkArtifact.getType()).thenReturn("xcode-framework");
+		when(mockFrameworkArtifact.getType()).thenReturn("xcode-dynamic-framework");
 		when(mockLibraryArtifact.getType()).thenReturn("xcode-library");
 		when(mockFrameworkArtifact.getFile()).thenReturn(mockFrameworkFile);
 		when(mockLibraryArtifact.getFile()).thenReturn(mockLibraryFile);

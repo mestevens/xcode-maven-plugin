@@ -83,7 +83,6 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);
 		
 		List<File> dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.TEST);
-		System.out.println(dependencyFiles);
 		if (addDependencies) {
 			try {
 				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
