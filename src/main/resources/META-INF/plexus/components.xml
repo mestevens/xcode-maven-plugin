@@ -2,11 +2,23 @@
 	<components>
 		<component>
 			<role>org.apache.maven.artifact.handler.ArtifactHandler</role>
-			<role-hint>xcode-framework</role-hint>
+			<role-hint>xcode-dynamic-framework</role-hint>
 			<implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
 			</implementation>
 			<configuration>
-				<extension>xcode-framework</extension>
+				<extension>xcode-dynamic-framework</extension>
+				<language>objective-c</language>
+				<addedToClasspath>true</addedToClasspath>
+				<includesDependencies>false</includesDependencies>
+			</configuration>
+		</component>
+		<component>
+			<role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+			<role-hint>xcode-static-framework</role-hint>
+			<implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler
+			</implementation>
+			<configuration>
+				<extension>xcode-static-framework</extension>
 				<language>objective-c</language>
 				<addedToClasspath>true</addedToClasspath>
 				<includesDependencies>false</includesDependencies>
@@ -38,7 +50,54 @@
 		</component>
 		<component>
 			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
-			<role-hint>xcode-framework</role-hint>
+			<role-hint>xcode-dynamic-framework</role-hint>
+			<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+			</implementation>
+			<configuration>
+				<lifecycles>
+					<lifecycle>
+						<id>default</id>
+						<phases>
+							<initialize>
+								ca.mestevens.ios:xcode-maven-plugin:set-keychain
+							</initialize>
+							<process-sources>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-sources
+							</process-sources>
+							<compile>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-build
+							</compile>
+							<process-test-sources>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-process-test-sources
+							</process-test-sources>
+							<package>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-package-framework
+							</package>
+							<test>
+								ca.mestevens.ios:xcode-maven-plugin:xcode-test
+							</test>
+							<install>
+								org.apache.maven.plugins:maven-install-plugin:install
+							</install>
+							<deploy>
+								org.apache.maven.plugins:maven-deploy-plugin:deploy
+							</deploy>
+						</phases>
+					</lifecycle>
+					<lifecycle>
+						<id>clean</id>
+						<phases>
+							<clean>
+								org.apache.maven.plugins:maven-clean-plugin:clean
+							</clean>
+						</phases>
+					</lifecycle>
+				</lifecycles>
+			</configuration>
+		</component>
+		<component>
+			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+			<role-hint>xcode-static-framework</role-hint>
 			<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
 			</implementation>
 			<configuration>

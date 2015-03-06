@@ -31,12 +31,12 @@ public class CopyDependenciesUtil {
 		List<File> dependencyFiles = new ArrayList<File>();
 		for (Artifact artifact : artifacts) {
 			String type = artifact.getType();
-			if ("xcode-framework".equals(type) || "xcode-library".equals(type)) {
+			if ("xcode-dynamic-framework".equals(type) || "xcode-static-framework".equals(type) || "xcode-library".equals(type)) {
 				try {
 					// Get File from result artifact
 					File file = artifact.getFile();
 					String resultFileName = project.getBuild().getDirectory() + "/xcode-dependencies/";
-					if (type.equals("xcode-framework")) {
+					if (type.equals("xcode-dynamic-framework") || type.equals("xcode-static-framework")) {
 						resultFileName += "frameworks";
 					} else if (type.equals("xcode-library")) {
 						resultFileName += "libraries";
@@ -52,7 +52,7 @@ public class CopyDependenciesUtil {
 					
 					processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 					
-					if (type.equals("xcode-framework")) {
+					if (type.equals("xcode-dynamic-framework") || type.equals("xcode-static-framework")) {
 						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
 					} else if (type.equals("xcode-library")) {
 						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));

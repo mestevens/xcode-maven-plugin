@@ -62,7 +62,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test
 	public void testExecuteFrameworkWithDeviceList() throws MojoExecutionException, MojoFailureException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");
 		simulatorArchs.add("x86_64");
@@ -105,7 +105,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test
 	public void testExecuteFrameworkWithNullDeviceList() throws MojoExecutionException, MojoFailureException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");
 		simulatorArchs.add("x86_64");
@@ -150,7 +150,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test
 	public void testExecuteFrameworkWithEmptyDeviceList() throws MojoExecutionException, MojoFailureException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");
 		simulatorArchs.add("x86_64");
@@ -192,7 +192,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test(expectedExceptions = MojoFailureException.class)
 	public void testExecuteFrameworkErrorBuildingSimulatorFramework() throws MojoFailureException, MojoExecutionException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");
 		simulatorArchs.add("x86_64");
@@ -206,7 +206,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test(expectedExceptions = MojoFailureException.class)
 	public void testExecuteFrameworkErrorBuildingDeviceFramework() throws MojoExecutionException, MojoFailureException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");
 		simulatorArchs.add("x86_64");
@@ -227,7 +227,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test(expectedExceptions = MojoFailureException.class)
 	public void testExecuteFrameworkErrorLinkingFramework() throws MojoExecutionException, MojoFailureException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");
 		simulatorArchs.add("x86_64");
@@ -261,7 +261,7 @@ public class XcodeBuildMojoTest {
 	
 	@Test
 	public void testExecuteFrameworkWithDeviceListFromXcodeProj() throws MojoExecutionException, MojoFailureException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		buildMojo.xcodeProject = pbxprojPathString;
 		List<String> simulatorArchs = new ArrayList<String>();
 		simulatorArchs.add("i386");

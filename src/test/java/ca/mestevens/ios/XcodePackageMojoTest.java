@@ -55,11 +55,11 @@ public class XcodePackageMojoTest {
 	
 	@Test
 	public void testExecuteFrameworkPackage() throws MojoFailureException, MojoExecutionException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(artifactName + ".xcode-framework");
+		zipCommand.add(artifactName + ".xcode-dynamic-framework");
 		zipCommand.add(artifactName + ".framework");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(0);
 		Artifact mockArtifact = mock(Artifact.class);
@@ -67,16 +67,16 @@ public class XcodePackageMojoTest {
 		
 		packageMojo.execute();
 		verify(mockProcessRunner, times(1)).runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));
-		verify(mockArtifact, times(1)).setFile(new File(targetDirectory + "/" + artifactName + ".xcode-framework"));
+		verify(mockArtifact, times(1)).setFile(new File(targetDirectory + "/" + artifactName + ".xcode-dynamic-framework"));
 	}
 	
 	@Test(expectedExceptions = MojoFailureException.class)
 	public void testExecuteFrameworkPackageThrowsErrorOnZip() throws MojoFailureException, MojoExecutionException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(artifactName + ".xcode-framework");
+		zipCommand.add(artifactName + ".xcode-dynamic-framework");
 		zipCommand.add(artifactName + ".framework");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(1);
 		
@@ -85,16 +85,16 @@ public class XcodePackageMojoTest {
 	
 	@Test
 	public void testExecuteFrameworkPackageWithExistingZippedFile() throws MojoFailureException, MojoExecutionException {
-		when(mockProject.getPackaging()).thenReturn("xcode-framework");
+		when(mockProject.getPackaging()).thenReturn("xcode-dynamic-framework");
 		List<String> zipCommand = new ArrayList<String>();
 		zipCommand.add("zip");
 		zipCommand.add("-r");
-		zipCommand.add(artifactName + ".xcode-framework");
+		zipCommand.add(artifactName + ".xcode-dynamic-framework");
 		zipCommand.add(artifactName + ".framework");
 		when(mockProcessRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]))).thenReturn(0);
 		Artifact mockArtifact = mock(Artifact.class);
 		when(mockProject.getArtifact()).thenReturn(mockArtifact);
-		File zippedFile = new File(targetDirectory + "/" + artifactName + ".xcode-framework");
+		File zippedFile = new File(targetDirectory + "/" + artifactName + ".xcode-dynamic-framework");
 		zippedFile.mkdir();
 		assertTrue(zippedFile.exists());
 		

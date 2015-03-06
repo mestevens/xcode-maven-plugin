@@ -1,6 +1,7 @@
 package ca.mestevens.ios;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
@@ -157,7 +159,7 @@ public class XcodeBuildMojo extends AbstractMojo {
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		String packaging = project.getPackaging();
-		if (packaging.equals("xcode-framework") || packaging.equals("xcode-library")) {
+		if (packaging.equals("xcode-dynamic-framework") || packaging.equals("xcode-static-framework") || packaging.equals("xcode-library")) {
 			if (simulatorArchs == null) {
 				simulatorArchs = new ArrayList<String>();
 				simulatorArchs.add("i386");
@@ -233,10 +235,10 @@ public class XcodeBuildMojo extends AbstractMojo {
 				lipoCommand.add("-output");
 
 				String libraryLocation = "";
-				if (packaging.equals("xcode-framework")) {
+				if (packaging.equals("xcode-dynamic-framework")) {
 					lipoCommand.add(artifactName);
 					libraryLocation = artifactName + ".framework/" + artifactName;
-				} else if (packaging.equals("xcode-library")) {
+				} else if (packaging.equals("xcode-library") || packaging.equals("xcode-static-framework")) {
 					lipoCommand.add("lib" + artifactName + ".a");
 					libraryLocation =  "lib" + artifactName + ".a";
 				}
@@ -249,13 +251,28 @@ public class XcodeBuildMojo extends AbstractMojo {
 
 				returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 				checkReturnValue(returnValue);
-				if (packaging.equals("xcode-framework")) {
+				if (packaging.equals("xcode-dynamic-framework")) {
 					if (buildDevice) {
 						processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + artifactName + ".framework", ".");
 					} else {
 						processRunner.runProcess(targetDirectory, "cp", "-r", "iphonesimulator-" + simulatorArchs.get(0) + "/" + artifactName + ".framework", ".");
 					}
 					processRunner.runProcess(targetDirectory, "cp", artifactName, artifactName + ".framework/.");
+				} else if (packaging.equals("xcode-static-framework")) {
+					processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "Headers");
+					processRunner.runProcess(targetDirectory, "mv", libraryLocation, artifactName);
+					File frameworkFile = new File(targetDirectory + "/" + artifactName + ".framework");
+					if (frameworkFile.exists()) {
+						try {
+							FileUtils.deleteDirectory(frameworkFile);
+						} catch (IOException e) {
+							getLog().error("Problem creating/deleting framework file: " + artifactName);
+							getLog().error(e.getMessage());
+							throw new MojoFailureException("Problem creating/deleting framework file: " + artifactName);
+						}
+					}
+					processRunner.runProcess(targetDirectory, "mkdir", artifactName + ".framework");
+					processRunner.runProcess(targetDirectory, "cp", "-R", "Headers", artifactName, artifactName + ".framework");
 				} else if (packaging.equals("xcode-library")) {
 					processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
 				}
