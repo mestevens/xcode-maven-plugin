@@ -43,6 +43,9 @@ public class XcodePackageMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
 			String packaging = project.getPackaging();
+			if ("xcode-framework".equals(packaging)) {
+				packaging = "xcode-dynamic-framework";
+			}
 			String packagedFileName = artifactName + "." + packaging;
 			File zippedFile = new File(targetDirectory + "/" + packagedFileName);
 			List<String> inputFiles = new ArrayList<String>();

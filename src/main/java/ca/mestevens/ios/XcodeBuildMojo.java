@@ -159,6 +159,9 @@ public class XcodeBuildMojo extends AbstractMojo {
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		String packaging = project.getPackaging();
+		if ("xcode-framework".equals(packaging)) {
+			packaging = "xcode-dynamic-framework";
+		}
 		if (packaging.equals("xcode-dynamic-framework") || packaging.equals("xcode-static-framework") || packaging.equals("xcode-library")) {
 			if (simulatorArchs == null) {
 				simulatorArchs = new ArrayList<String>();

@@ -31,6 +31,9 @@ public class CopyDependenciesUtil {
 		List<File> dependencyFiles = new ArrayList<File>();
 		for (Artifact artifact : artifacts) {
 			String type = artifact.getType();
+			if ("xcode-framework".equals(type)) {
+				type = "xcode-dynamic-framework";
+			}
 			if ("xcode-dynamic-framework".equals(type) || "xcode-static-framework".equals(type) || "xcode-library".equals(type)) {
 				try {
 					// Get File from result artifact
