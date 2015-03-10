@@ -21,6 +21,7 @@ import ca.mestevens.ios.utils.XcodeProjectUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -79,45 +80,45 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 	public ProcessRunner processRunner;
 	public CopyDependenciesUtil copyDependenciesUtil;
 	
-<span class="fc" id="L82">	public XcodeProcessSourcesMojo() {</span>
-<span class="fc" id="L83">		this.processRunner = new ProcessRunner(getLog());</span>
-<span class="fc" id="L84">	}</span>
+<span class="fc" id="L83">	public XcodeProcessSourcesMojo() {</span>
+<span class="fc" id="L84">		this.processRunner = new ProcessRunner(getLog());</span>
+<span class="fc" id="L85">	}</span>
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
-<span class="fc" id="L87">		getLog().info(&quot;Starting execution&quot;);</span>
+<span class="fc" id="L88">		getLog().info(&quot;Starting execution&quot;);</span>
 		
-<span class="fc" id="L89">		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);</span>
+<span class="fc" id="L90">		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);</span>
 		
-<span class="fc" id="L91">		List&lt;File&gt; dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);</span>
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">		if (addDependencies) {</span>
+<span class="fc" id="L92">		Map&lt;String, List&lt;File&gt;&gt; dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (addDependencies) {</span>
 			try {
-<span class="nc" id="L94">				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + &quot;/project.pbxproj&quot;);</span>
-<span class="nc bnc" id="L95" title="All 2 branches missed.">				if (dependencyTargets == null) {</span>
-<span class="nc" id="L96">					dependencyTargets = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L95">				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + &quot;/project.pbxproj&quot;);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				if (dependencyTargets == null) {</span>
+<span class="nc" id="L97">					dependencyTargets = new ArrayList&lt;String&gt;();</span>
 				}
-<span class="nc bnc" id="L98" title="All 2 branches missed.">				if (dependencyTargets.isEmpty()) {</span>
-<span class="nc" id="L99">					dependencyTargets.add(project.getArtifactId());</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (dependencyTargets.isEmpty()) {</span>
+<span class="nc" id="L100">					dependencyTargets.add(project.getArtifactId());</span>
 				}
-<span class="nc bnc" id="L101" title="All 2 branches missed.">				for (String target : dependencyTargets) {</span>
-<span class="nc" id="L102">					projectUtil.addDependenciesToTarget(target, dependencyFiles);</span>
-<span class="nc" id="L103">				}</span>
-<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (addTestDependencies) {</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">					if (dependencyTestTargets == null) {</span>
-<span class="nc" id="L106">						dependencyTestTargets = new ArrayList&lt;String&gt;();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				for (String target : dependencyTargets) {</span>
+<span class="nc" id="L103">					projectUtil.addDependenciesToTarget(target, dependencyMap.get(&quot;dynamic-frameworks&quot;), dependencyMap.get(&quot;static-frameworks&quot;), dependencyMap.get(&quot;libraries&quot;));</span>
+<span class="nc" id="L104">				}</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				if (addTestDependencies) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">					if (dependencyTestTargets == null) {</span>
+<span class="nc" id="L107">						dependencyTestTargets = new ArrayList&lt;String&gt;();</span>
 					}
-<span class="nc bnc" id="L108" title="All 2 branches missed.">					if (dependencyTestTargets.isEmpty()) {</span>
-<span class="nc" id="L109">						dependencyTestTargets.add(project.getArtifactId() + &quot;Tests&quot;);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">					if (dependencyTestTargets.isEmpty()) {</span>
+<span class="nc" id="L110">						dependencyTestTargets.add(project.getArtifactId() + &quot;Tests&quot;);</span>
 					}
-<span class="nc bnc" id="L111" title="All 2 branches missed.">					for (String target : dependencyTestTargets) {</span>
-<span class="nc" id="L112">						projectUtil.addDependenciesToTarget(target, dependencyFiles);</span>
-<span class="nc" id="L113">					}</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					for (String target : dependencyTestTargets) {</span>
+<span class="nc" id="L113">						projectUtil.addDependenciesToTarget(target, dependencyMap.get(&quot;dynamic-frameworks&quot;), dependencyMap.get(&quot;static-frameworks&quot;), dependencyMap.get(&quot;libraries&quot;));</span>
+<span class="nc" id="L114">					}</span>
 				}
-<span class="nc" id="L115">				projectUtil.writeProject();</span>
-<span class="nc" id="L116">			} catch (Exception ex) {</span>
-<span class="nc" id="L117">				throw new MojoFailureException(ex.getMessage());</span>
-<span class="nc" id="L118">			}</span>
+<span class="nc" id="L116">				projectUtil.writeProject();</span>
+<span class="nc" id="L117">			} catch (Exception ex) {</span>
+<span class="nc" id="L118">				throw new MojoFailureException(ex.getMessage());</span>
+<span class="nc" id="L119">			}</span>
 		}
-<span class="fc" id="L120">	}</span>
+<span class="fc" id="L121">	}</span>
 	
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>

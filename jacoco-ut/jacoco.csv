@@ -1,11 +1,11 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-xcode-maven-plugin,ca.mestevens.ios,XcodeBuildMojo,277,667,49,51,43,105,36,18,0,4
-xcode-maven-plugin,ca.mestevens.ios,XcodePackageMojo,15,162,0,8,4,27,0,6,0,2
+xcode-maven-plugin,ca.mestevens.ios,XcodeBuildMojo,503,734,65,59,62,114,48,18,0,4
+xcode-maven-plugin,ca.mestevens.ios,XcodePackageMojo,17,170,2,10,5,28,2,6,0,2
 xcode-maven-plugin,ca.mestevens.ios,XcodeTestMojo,0,114,0,12,0,24,0,8,0,2
 xcode-maven-plugin,ca.mestevens.ios,KeychainMojo,0,236,0,14,0,21,0,9,0,2
-xcode-maven-plugin,ca.mestevens.ios,XcodeProcessSourcesMojo,103,34,15,1,20,8,8,2,0,2
+xcode-maven-plugin,ca.mestevens.ios,XcodeProcessSourcesMojo,125,34,15,1,20,8,8,2,0,2
 xcode-maven-plugin,ca.mestevens.ios,XcodePackageApplicationMojo,376,0,18,0,51,0,11,0,2,0
-xcode-maven-plugin,ca.mestevens.ios,XcodeProcessTestSourcesMojo,105,0,10,0,22,0,7,0,2,0
-xcode-maven-plugin,ca.mestevens.ios.utils,CopyDependenciesUtil,33,193,3,13,5,29,3,7,0,2
-xcode-maven-plugin,ca.mestevens.ios.utils,XcodeProjectUtil,165,677,36,92,12,140,33,42,8,3
+xcode-maven-plugin,ca.mestevens.ios,XcodeProcessTestSourcesMojo,113,0,10,0,21,0,7,0,2,0
+xcode-maven-plugin,ca.mestevens.ios.utils,CopyDependenciesUtil,56,236,7,17,7,37,7,7,0,2
+xcode-maven-plugin,ca.mestevens.ios.utils,XcodeProjectUtil,194,750,47,89,14,148,42,45,8,11
 xcode-maven-plugin,ca.mestevens.ios.utils,ProcessRunner,24,88,0,8,6,21,0,7,0,3

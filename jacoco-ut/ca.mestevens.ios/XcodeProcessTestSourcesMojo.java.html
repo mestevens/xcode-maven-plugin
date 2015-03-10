@@ -3,6 +3,7 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -73,17 +74,16 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 	public ProcessRunner processRunner;
 	public CopyDependenciesUtil copyDependenciesUtil;
 	
-<span class="nc" id="L76">	public XcodeProcessTestSourcesMojo() {</span>
-<span class="nc" id="L77">		this.processRunner = new ProcessRunner(getLog());</span>
-<span class="nc" id="L78">	}</span>
+<span class="nc" id="L77">	public XcodeProcessTestSourcesMojo() {</span>
+<span class="nc" id="L78">		this.processRunner = new ProcessRunner(getLog());</span>
+<span class="nc" id="L79">	}</span>
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
-<span class="nc" id="L81">		getLog().info(&quot;Starting execution&quot;);</span>
+<span class="nc" id="L82">		getLog().info(&quot;Starting execution&quot;);</span>
 		
-<span class="nc" id="L83">		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);</span>
+<span class="nc" id="L84">		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);</span>
 		
-<span class="nc" id="L85">		List&lt;File&gt; dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.TEST);</span>
-<span class="nc" id="L86">		System.out.println(dependencyFiles);</span>
+<span class="nc" id="L86">		Map&lt;String, List&lt;File&gt;&gt; dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.TEST);</span>
 <span class="nc bnc" id="L87" title="All 2 branches missed.">		if (addDependencies) {</span>
 			try {
 <span class="nc" id="L89">				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + &quot;/project.pbxproj&quot;);</span>
@@ -95,7 +95,7 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 <span class="nc" id="L95">						dependencyTestTargets.add(project.getArtifactId() + &quot;Tests&quot;);</span>
 					}
 <span class="nc bnc" id="L97" title="All 2 branches missed.">					for (String target : dependencyTestTargets) {</span>
-<span class="nc" id="L98">						projectUtil.addDependenciesToTarget(target, dependencyFiles);</span>
+<span class="nc" id="L98">						projectUtil.addDependenciesToTarget(target, dependencyMap.get(&quot;dynamic-frameworks&quot;), dependencyMap.get(&quot;static-frameworks&quot;), dependencyMap.get(&quot;libraries&quot;));</span>
 <span class="nc" id="L99">					}</span>
 				}
 <span class="nc" id="L101">				projectUtil.writeProject();</span>

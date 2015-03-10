@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XcodeBuildMojo.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">xcode-maven-plugin</a> &gt; <a href="index.source.html" class="el_package">ca.mestevens.ios</a> &gt; <span class="el_source">XcodeBuildMojo.java</span></div><h1>XcodeBuildMojo.java</h1><pre class="source lang-java linenums">package ca.mestevens.ios;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
 
 import ca.mestevens.ios.utils.ProcessRunner;
 import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
@@ -146,195 +148,237 @@ public class XcodeBuildMojo extends AbstractMojo {
 	@Parameter(alias = &quot;buildDevice&quot;, property = &quot;xcode.project.build.device&quot;, defaultValue = &quot;true&quot;, required = false)
 	public boolean buildDevice;
 	
+	@Parameter(alias = &quot;forceCodeSigning&quot;, property = &quot;xcode.project.force.code.signing&quot;, defaultValue = &quot;false&quot;, required = false)
+	public boolean forceCodeSigning;
+	
 	public ProcessRunner processRunner;
 	
-<span class="fc" id="L151">	public XcodeBuildMojo() {</span>
-<span class="fc" id="L152">		this.processRunner = new ProcessRunner(getLog());</span>
-<span class="fc" id="L153">	}</span>
+<span class="fc" id="L156">	public XcodeBuildMojo() {</span>
+<span class="fc" id="L157">		this.processRunner = new ProcessRunner(getLog());</span>
+<span class="fc" id="L158">	}</span>
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
-<span class="fc" id="L156">		String packaging = project.getPackaging();</span>
-<span class="pc bpc" id="L157" title="1 of 4 branches missed.">		if (packaging.equals(&quot;xcode-framework&quot;) || packaging.equals(&quot;xcode-library&quot;)) {</span>
-<span class="pc bpc" id="L158" title="1 of 2 branches missed.">			if (simulatorArchs == null) {</span>
-<span class="fc" id="L159">				simulatorArchs = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L160">				simulatorArchs.add(&quot;i386&quot;);</span>
-<span class="fc" id="L161">				simulatorArchs.add(&quot;x86_64&quot;);</span>
+<span class="fc" id="L161">		String packaging = project.getPackaging();</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">		if (&quot;xcode-framework&quot;.equals(packaging)) {</span>
+<span class="nc" id="L163">			packaging = &quot;xcode-dynamic-framework&quot;;</span>
+		}
+<span class="pc bpc" id="L165" title="2 of 6 branches missed.">		if (packaging.equals(&quot;xcode-dynamic-framework&quot;) || packaging.equals(&quot;xcode-static-framework&quot;) || packaging.equals(&quot;xcode-library&quot;)) {</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">			if (simulatorArchs == null) {</span>
+<span class="fc" id="L167">				simulatorArchs = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L168">				simulatorArchs.add(&quot;i386&quot;);</span>
+<span class="fc" id="L169">				simulatorArchs.add(&quot;x86_64&quot;);</span>
 			}
-<span class="fc bfc" id="L163" title="All 2 branches covered.">			if (deviceArchs == null) {</span>
-<span class="fc" id="L164">				deviceArchs = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L165">				File pbxprojFile = new File(xcodeProject + &quot;/project.pbxproj&quot;);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">				if (pbxprojFile.exists()) {</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">			if (deviceArchs == null) {</span>
+<span class="fc" id="L172">				deviceArchs = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L173">				File pbxprojFile = new File(xcodeProject + &quot;/project.pbxproj&quot;);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">				if (pbxprojFile.exists()) {</span>
 					try {
-<span class="fc" id="L168">						XCodeProject project = new XCodeProject(xcodeProject + &quot;/project.pbxproj&quot;);</span>
-<span class="fc" id="L169">						XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());</span>
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">						for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {</span>
-<span class="fc" id="L171">							XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());</span>
-<span class="pc bpc" id="L172" title="1 of 2 branches missed.">							if (buildConfiguration != null) {</span>
-<span class="fc" id="L173">								List&lt;String&gt; archs = buildConfiguration.getBuildSettingAsList(&quot;ARCHS&quot;);</span>
-<span class="pc bpc" id="L174" title="1 of 2 branches missed.">								if (archs != null) {</span>
-<span class="fc" id="L175">									deviceArchs = archs;</span>
-<span class="fc" id="L176">									break;</span>
+<span class="fc" id="L176">						XCodeProject project = new XCodeProject(xcodeProject + &quot;/project.pbxproj&quot;);</span>
+<span class="fc" id="L177">						XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">						for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {</span>
+<span class="fc" id="L179">							XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">							if (buildConfiguration != null) {</span>
+<span class="fc" id="L181">								List&lt;String&gt; archs = buildConfiguration.getBuildSettingAsList(&quot;ARCHS&quot;);</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">								if (archs != null) {</span>
+<span class="fc" id="L183">									deviceArchs = archs;</span>
+<span class="fc" id="L184">									break;</span>
 								}
 							}
-<span class="nc" id="L179">						}</span>
-<span class="nc" id="L180">					} catch (InvalidObjectFormatException e) {</span>
-<span class="nc" id="L181">						throw new MojoExecutionException(e.getMessage());</span>
-<span class="fc" id="L182">					}</span>
+<span class="nc" id="L187">						}</span>
+<span class="nc" id="L188">					} catch (InvalidObjectFormatException e) {</span>
+<span class="nc" id="L189">						throw new MojoExecutionException(e.getMessage());</span>
+<span class="fc" id="L190">					}</span>
 				}
-<span class="fc bfc" id="L184" title="All 2 branches covered.">				if (deviceArchs.isEmpty()) {</span>
-<span class="fc" id="L185">					deviceArchs.add(&quot;armv7&quot;);</span>
-<span class="fc" id="L186">					deviceArchs.add(&quot;arm64&quot;);</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">				if (deviceArchs.isEmpty()) {</span>
+<span class="fc" id="L193">					deviceArchs.add(&quot;armv7&quot;);</span>
+<span class="fc" id="L194">					deviceArchs.add(&quot;arm64&quot;);</span>
 				}
 			}
-<span class="pc bpc" id="L189" title="2 of 4 branches missed.">			if (simulatorArchs == null || simulatorArchs.isEmpty()) {</span>
-<span class="nc" id="L190">				buildSimulator = false;</span>
+<span class="pc bpc" id="L197" title="2 of 4 branches missed.">			if (simulatorArchs == null || simulatorArchs.isEmpty()) {</span>
+<span class="nc" id="L198">				buildSimulator = false;</span>
 			}
-<span class="pc bpc" id="L192" title="1 of 4 branches missed.">			if (deviceArchs == null || deviceArchs.isEmpty()) {</span>
-<span class="fc" id="L193">				buildDevice = false;</span>
+<span class="pc bpc" id="L200" title="1 of 4 branches missed.">			if (deviceArchs == null || deviceArchs.isEmpty()) {</span>
+<span class="fc" id="L201">				buildDevice = false;</span>
 			}
-<span class="fc" id="L195">			int returnValue = 0;</span>
-<span class="fc" id="L196">			List&lt;String&gt; buildCommands = createCommonBuildCommands();</span>
-<span class="pc bpc" id="L197" title="1 of 2 branches missed.">			if (buildSimulator) {</span>
-<span class="fc bfc" id="L198" title="All 2 branches covered.">				for (String simulatorArch : simulatorArchs) {</span>
-<span class="fc" id="L199">					List&lt;String&gt; simulatorBuildCommands = new ArrayList&lt;String&gt;(buildCommands);</span>
-<span class="fc" id="L200">					simulatorBuildCommands.add(&quot;-sdk&quot;);</span>
-<span class="fc" id="L201">					simulatorBuildCommands.add(&quot;iphonesimulator&quot;);</span>
-<span class="fc" id="L202">					simulatorBuildCommands.add(&quot;-arch&quot;);</span>
-<span class="fc" id="L203">					simulatorBuildCommands.add(simulatorArch);</span>
-<span class="fc" id="L204">					simulatorBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/iphonesimulator-&quot; + simulatorArch);</span>
-<span class="fc" id="L205">					simulatorBuildCommands.add(&quot;build&quot;);</span>
-<span class="fc" id="L206">					returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));</span>
-<span class="fc" id="L207">					checkReturnValue(returnValue);</span>
-<span class="fc" id="L208">				}</span>
+<span class="fc" id="L203">			int returnValue = 0;</span>
+<span class="fc" id="L204">			List&lt;String&gt; buildCommands = createCommonBuildCommands();</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">			if (!forceCodeSigning) {</span>
+<span class="nc" id="L206">				buildCommands.add(&quot;CODE_SIGNING_REQUIRED=NO&quot;);</span>
 			}
-<span class="fc bfc" id="L210" title="All 2 branches covered.">			if (buildDevice) {</span>
-<span class="fc bfc" id="L211" title="All 2 branches covered.">				for (String deviceArch : deviceArchs) {</span>
-<span class="fc" id="L212">					List&lt;String&gt; deviceBuildCommands = new ArrayList&lt;String&gt;(buildCommands);</span>
-<span class="fc" id="L213">					deviceBuildCommands.add(&quot;-sdk&quot;);</span>
-<span class="fc" id="L214">					deviceBuildCommands.add(&quot;iphoneos&quot;);</span>
-<span class="fc" id="L215">					deviceBuildCommands.add(&quot;-arch&quot;);</span>
-<span class="fc" id="L216">					deviceBuildCommands.add(deviceArch);</span>
-<span class="fc" id="L217">					deviceBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/iphoneos-&quot; + deviceArch);</span>
-<span class="fc" id="L218">					deviceBuildCommands.add(&quot;build&quot;);</span>
-<span class="fc" id="L219">					returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));</span>
-<span class="fc" id="L220">					checkReturnValue(returnValue);</span>
-<span class="fc" id="L221">				}</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">			if (buildSimulator) {</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">				for (String simulatorArch : simulatorArchs) {</span>
+<span class="fc" id="L210">					List&lt;String&gt; simulatorBuildCommands = new ArrayList&lt;String&gt;(buildCommands);</span>
+<span class="fc" id="L211">					simulatorBuildCommands.add(&quot;-sdk&quot;);</span>
+<span class="fc" id="L212">					simulatorBuildCommands.add(&quot;iphonesimulator&quot;);</span>
+<span class="fc" id="L213">					simulatorBuildCommands.add(&quot;-arch&quot;);</span>
+<span class="fc" id="L214">					simulatorBuildCommands.add(simulatorArch);</span>
+<span class="fc" id="L215">					simulatorBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/iphonesimulator-&quot; + simulatorArch);</span>
+<span class="fc" id="L216">					simulatorBuildCommands.add(&quot;build&quot;);</span>
+<span class="fc" id="L217">					returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));</span>
+<span class="fc" id="L218">					checkReturnValue(returnValue);</span>
+<span class="fc" id="L219">				}</span>
 			}
-<span class="pc bpc" id="L223" title="3 of 4 branches missed.">			if (buildSimulator || buildDevice) {</span>
-<span class="fc" id="L224">				List&lt;String&gt; lipoCommand = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L225">				lipoCommand.add(&quot;lipo&quot;);</span>
-<span class="fc" id="L226">				lipoCommand.add(&quot;-create&quot;);</span>
-<span class="fc" id="L227">				lipoCommand.add(&quot;-output&quot;);</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">			if (buildDevice) {</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">				for (String deviceArch : deviceArchs) {</span>
+<span class="fc" id="L223">					List&lt;String&gt; deviceBuildCommands = new ArrayList&lt;String&gt;(buildCommands);</span>
+<span class="fc" id="L224">					deviceBuildCommands.add(&quot;-sdk&quot;);</span>
+<span class="fc" id="L225">					deviceBuildCommands.add(&quot;iphoneos&quot;);</span>
+<span class="fc" id="L226">					deviceBuildCommands.add(&quot;-arch&quot;);</span>
+<span class="fc" id="L227">					deviceBuildCommands.add(deviceArch);</span>
+<span class="fc" id="L228">					deviceBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/iphoneos-&quot; + deviceArch);</span>
+<span class="fc" id="L229">					deviceBuildCommands.add(&quot;build&quot;);</span>
+<span class="fc" id="L230">					returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));</span>
+<span class="fc" id="L231">					checkReturnValue(returnValue);</span>
+<span class="fc" id="L232">				}</span>
+			}
+<span class="pc bpc" id="L234" title="3 of 4 branches missed.">			if (buildSimulator || buildDevice) {</span>
+<span class="fc" id="L235">				List&lt;String&gt; lipoCommand = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L236">				lipoCommand.add(&quot;lipo&quot;);</span>
+<span class="fc" id="L237">				lipoCommand.add(&quot;-create&quot;);</span>
+<span class="fc" id="L238">				lipoCommand.add(&quot;-output&quot;);</span>
 
-<span class="fc" id="L229">				String libraryLocation = &quot;&quot;;</span>
-<span class="fc bfc" id="L230" title="All 2 branches covered.">				if (packaging.equals(&quot;xcode-framework&quot;)) {</span>
-<span class="fc" id="L231">					lipoCommand.add(artifactName);</span>
-<span class="fc" id="L232">					libraryLocation = artifactName + &quot;.framework/&quot; + artifactName;</span>
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">				} else if (packaging.equals(&quot;xcode-library&quot;)) {</span>
-<span class="fc" id="L234">					lipoCommand.add(&quot;lib&quot; + artifactName + &quot;.a&quot;);</span>
-<span class="fc" id="L235">					libraryLocation =  &quot;lib&quot; + artifactName + &quot;.a&quot;;</span>
+<span class="fc" id="L240">				String libraryLocation = &quot;&quot;;</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">				if (packaging.equals(&quot;xcode-dynamic-framework&quot;)) {</span>
+<span class="fc" id="L242">					lipoCommand.add(artifactName);</span>
+<span class="fc" id="L243">					libraryLocation = artifactName + &quot;.framework/&quot; + artifactName;</span>
+<span class="pc bpc" id="L244" title="3 of 4 branches missed.">				} else if (packaging.equals(&quot;xcode-library&quot;) || packaging.equals(&quot;xcode-static-framework&quot;)) {</span>
+<span class="fc" id="L245">					lipoCommand.add(&quot;lib&quot; + artifactName + &quot;.a&quot;);</span>
+<span class="fc" id="L246">					libraryLocation =  &quot;lib&quot; + artifactName + &quot;.a&quot;;</span>
 				}
-<span class="fc bfc" id="L237" title="All 2 branches covered.">				for (String simulatorArch : simulatorArchs) {</span>
-<span class="fc" id="L238">					lipoCommand.add(&quot;iphonesimulator-&quot; + simulatorArch + &quot;/&quot; + libraryLocation);</span>
-<span class="fc" id="L239">				}</span>
-<span class="fc bfc" id="L240" title="All 2 branches covered.">				for (String deviceArch : deviceArchs) {</span>
-<span class="fc" id="L241">					lipoCommand.add(&quot;iphoneos-&quot; + deviceArch + &quot;/&quot; + libraryLocation);</span>
-<span class="fc" id="L242">				}</span>
-
-<span class="fc" id="L244">				returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));</span>
-<span class="fc" id="L245">				checkReturnValue(returnValue);</span>
-<span class="fc bfc" id="L246" title="All 2 branches covered.">				if (packaging.equals(&quot;xcode-framework&quot;)) {</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">					if (buildDevice) {</span>
-<span class="fc" id="L248">						processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphoneos-&quot; + deviceArchs.get(0) + &quot;/&quot; + artifactName + &quot;.framework&quot;, &quot;.&quot;);</span>
-					} else {
-<span class="fc" id="L250">						processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphonesimulator-&quot; + simulatorArchs.get(0) + &quot;/&quot; + artifactName + &quot;.framework&quot;, &quot;.&quot;);</span>
+<span class="fc" id="L248">				boolean fileExists = false;</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">				for (String simulatorArch : simulatorArchs) {</span>
+<span class="fc" id="L250">					lipoCommand.add(&quot;iphonesimulator-&quot; + simulatorArch + &quot;/&quot; + libraryLocation);</span>
+<span class="fc" id="L251">					File file = new File(targetDirectory + &quot;/iphonesimulator-&quot; + simulatorArch + &quot;/&quot; + libraryLocation);</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">					if(file.exists()) {</span>
+<span class="nc" id="L253">						fileExists = true;</span>
 					}
-<span class="fc" id="L252">					processRunner.runProcess(targetDirectory, &quot;cp&quot;, artifactName, artifactName + &quot;.framework/.&quot;);</span>
-<span class="pc bpc" id="L253" title="1 of 2 branches missed.">				} else if (packaging.equals(&quot;xcode-library&quot;)) {</span>
-<span class="fc" id="L254">					processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphoneos-&quot; + deviceArchs.get(0) + &quot;/include&quot;, &quot;headers&quot;);</span>
+<span class="fc" id="L255">				}</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">				for (String deviceArch : deviceArchs) {</span>
+<span class="fc" id="L257">					lipoCommand.add(&quot;iphoneos-&quot; + deviceArch + &quot;/&quot; + libraryLocation);</span>
+<span class="fc" id="L258">					File file = new File(targetDirectory + &quot;/iphoneos-&quot; + deviceArch + &quot;/&quot; + libraryLocation);</span>
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">					if(file.exists()) {</span>
+<span class="nc" id="L260">						fileExists = true;</span>
+					}
+<span class="fc" id="L262">				}</span>
+
+<span class="pc bpc" id="L264" title="2 of 4 branches missed.">				if (fileExists || !packaging.equals(&quot;xcode-static-framework&quot;)) {</span>
+<span class="fc" id="L265">					returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));</span>
+<span class="fc" id="L266">					checkReturnValue(returnValue);</span>
+				}
+
+<span class="fc bfc" id="L269" title="All 2 branches covered.">				if (packaging.equals(&quot;xcode-dynamic-framework&quot;)) {</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">					if (buildDevice) {</span>
+<span class="fc" id="L271">						processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphoneos-&quot; + deviceArchs.get(0) + &quot;/&quot; + artifactName + &quot;.framework&quot;, &quot;.&quot;);</span>
+					} else {
+<span class="fc" id="L273">						processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphonesimulator-&quot; + simulatorArchs.get(0) + &quot;/&quot; + artifactName + &quot;.framework&quot;, &quot;.&quot;);</span>
+					}
+<span class="fc" id="L275">					processRunner.runProcess(targetDirectory, &quot;cp&quot;, artifactName, artifactName + &quot;.framework/.&quot;);</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">				} else if (packaging.equals(&quot;xcode-static-framework&quot;)) {</span>
+<span class="nc" id="L277">					processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphoneos-&quot; + deviceArchs.get(0) + &quot;/include&quot;, &quot;Headers&quot;);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">					if (fileExists) {</span>
+<span class="nc" id="L279">						processRunner.runProcess(targetDirectory, &quot;mv&quot;, libraryLocation, artifactName);</span>
+					}
+<span class="nc" id="L281">					File frameworkFile = new File(targetDirectory + &quot;/&quot; + artifactName + &quot;.framework&quot;);</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">					if (frameworkFile.exists()) {</span>
+						try {
+<span class="nc" id="L284">							FileUtils.deleteDirectory(frameworkFile);</span>
+<span class="nc" id="L285">						} catch (IOException e) {</span>
+<span class="nc" id="L286">							getLog().error(&quot;Problem creating/deleting framework file: &quot; + artifactName);</span>
+<span class="nc" id="L287">							getLog().error(e.getMessage());</span>
+<span class="nc" id="L288">							throw new MojoFailureException(&quot;Problem creating/deleting framework file: &quot; + artifactName);</span>
+<span class="nc" id="L289">						}</span>
+					}
+<span class="nc" id="L291">					processRunner.runProcess(targetDirectory, &quot;mkdir&quot;, artifactName + &quot;.framework&quot;);</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">					if (fileExists) {</span>
+<span class="nc" id="L293">						processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-R&quot;, &quot;Headers&quot;, artifactName, artifactName + &quot;.framework&quot;);</span>
+					} else {
+<span class="nc" id="L295">						processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-R&quot;, &quot;Headers&quot;, artifactName + &quot;.framework&quot;);</span>
+					}
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">				} else if (packaging.equals(&quot;xcode-library&quot;)) {</span>
+<span class="fc" id="L298">					processRunner.runProcess(targetDirectory, &quot;cp&quot;, &quot;-r&quot;, &quot;iphoneos-&quot; + deviceArchs.get(0) + &quot;/include&quot;, &quot;headers&quot;);</span>
 				}
 			}
-<span class="pc bnc" id="L257" title="All 2 branches missed.">		} else if (packaging.equals(&quot;xcode-application&quot;)) {</span>
-<span class="nc" id="L258">			List&lt;String&gt; applicationBuildCommands = createCommonBuildCommands();</span>
-<span class="nc" id="L259">			applicationBuildCommands.add(&quot;build&quot;);</span>
-<span class="nc" id="L260">			int returnValue = 0;</span>
-<span class="nc bnc" id="L261" title="All 2 branches missed.">			if (buildSimulator) {</span>
-<span class="nc" id="L262">				List&lt;String&gt; simulatorBuildCommands = new ArrayList&lt;String&gt;(applicationBuildCommands);</span>
-<span class="nc" id="L263">				simulatorBuildCommands.add(&quot;-sdk&quot;);</span>
-<span class="nc" id="L264">				simulatorBuildCommands.add(&quot;iphonesimulator&quot;);</span>
-<span class="nc" id="L265">				simulatorBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/build/iPhone-simulator&quot;);</span>
-<span class="nc" id="L266">				returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));</span>
-<span class="nc" id="L267">				checkReturnValue(returnValue);</span>
+<span class="pc bnc" id="L301" title="All 2 branches missed.">		} else if (packaging.equals(&quot;xcode-application&quot;)) {</span>
+<span class="nc" id="L302">			List&lt;String&gt; applicationBuildCommands = createCommonBuildCommands();</span>
+<span class="nc" id="L303">			applicationBuildCommands.add(&quot;build&quot;);</span>
+<span class="nc" id="L304">			int returnValue = 0;</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (buildSimulator) {</span>
+<span class="nc" id="L306">				List&lt;String&gt; simulatorBuildCommands = new ArrayList&lt;String&gt;(applicationBuildCommands);</span>
+<span class="nc" id="L307">				simulatorBuildCommands.add(&quot;-sdk&quot;);</span>
+<span class="nc" id="L308">				simulatorBuildCommands.add(&quot;iphonesimulator&quot;);</span>
+<span class="nc" id="L309">				simulatorBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/build/iPhone-simulator&quot;);</span>
+<span class="nc" id="L310">				returnValue = processRunner.runProcess(null, simulatorBuildCommands.toArray(new String[simulatorBuildCommands.size()]));</span>
+<span class="nc" id="L311">				checkReturnValue(returnValue);</span>
 			}
-<span class="nc bnc" id="L269" title="All 2 branches missed.">			if (buildDevice) {</span>
-<span class="nc" id="L270">				List&lt;String&gt; deviceBuildCommands = new ArrayList&lt;String&gt;(applicationBuildCommands);</span>
-<span class="nc" id="L271">				deviceBuildCommands.add(&quot;-sdk&quot;);</span>
-<span class="nc" id="L272">				deviceBuildCommands.add(&quot;iphoneos&quot;);</span>
-<span class="nc" id="L273">				deviceBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/build/iPhone&quot;);</span>
-<span class="nc" id="L274">				returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));</span>
-<span class="nc" id="L275">				checkReturnValue(returnValue);</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			if (buildDevice) {</span>
+<span class="nc" id="L314">				List&lt;String&gt; deviceBuildCommands = new ArrayList&lt;String&gt;(applicationBuildCommands);</span>
+<span class="nc" id="L315">				deviceBuildCommands.add(&quot;-sdk&quot;);</span>
+<span class="nc" id="L316">				deviceBuildCommands.add(&quot;iphoneos&quot;);</span>
+<span class="nc" id="L317">				deviceBuildCommands.add(&quot;CONFIGURATION_BUILD_DIR=&quot; + targetDirectory + &quot;/build/iPhone&quot;);</span>
+<span class="nc" id="L318">				returnValue = processRunner.runProcess(null, deviceBuildCommands.toArray(new String[deviceBuildCommands.size()]));</span>
+<span class="nc" id="L319">				checkReturnValue(returnValue);</span>
 			}
 		}
-<span class="fc" id="L278">	}</span>
+<span class="fc" id="L322">	}</span>
 	
 	protected void checkReturnValue(int returnValue) throws MojoFailureException {
-<span class="fc bfc" id="L281" title="All 2 branches covered.">		if (returnValue != 0) {</span>
-<span class="fc" id="L282">			throw new MojoFailureException(&quot;Failed to build project.&quot;);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">		if (returnValue != 0) {</span>
+<span class="fc" id="L326">			throw new MojoFailureException(&quot;Failed to build project.&quot;);</span>
 		}
-<span class="fc" id="L284">	}</span>
+<span class="fc" id="L328">	}</span>
 	
 	protected List&lt;String&gt; createCommonBuildCommands() {
-<span class="fc" id="L287">		List&lt;String&gt; buildCommands = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L288">		buildCommands.add(xcodebuild);</span>
-<span class="fc" id="L289">		buildCommands.add(&quot;-project&quot;);</span>
-<span class="fc" id="L290">		buildCommands.add(xcodeProject);</span>
-<span class="fc" id="L291">		buildCommands.add(&quot;-scheme&quot;);</span>
-<span class="fc" id="L292">		buildCommands.add(xcodeScheme);</span>
-<span class="pc bpc" id="L293" title="3 of 4 branches missed.">		if (xcodeTarget != null &amp;&amp; !xcodeTarget.isEmpty()) {</span>
-<span class="nc" id="L294">			buildCommands.add(&quot;-target&quot;);</span>
-<span class="nc" id="L295">			buildCommands.add(xcodeTarget);</span>
+<span class="fc" id="L331">		List&lt;String&gt; buildCommands = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L332">		buildCommands.add(xcodebuild);</span>
+<span class="fc" id="L333">		buildCommands.add(&quot;-project&quot;);</span>
+<span class="fc" id="L334">		buildCommands.add(xcodeProject);</span>
+<span class="fc" id="L335">		buildCommands.add(&quot;-scheme&quot;);</span>
+<span class="fc" id="L336">		buildCommands.add(xcodeScheme);</span>
+<span class="pc bpc" id="L337" title="3 of 4 branches missed.">		if (xcodeTarget != null &amp;&amp; !xcodeTarget.isEmpty()) {</span>
+<span class="nc" id="L338">			buildCommands.add(&quot;-target&quot;);</span>
+<span class="nc" id="L339">			buildCommands.add(xcodeTarget);</span>
 		}
-<span class="pc bpc" id="L297" title="1 of 2 branches missed.">		if (xcodeAllTargets) {</span>
-<span class="nc" id="L298">			buildCommands.add(&quot;-alltargets&quot;);</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		if (xcodeAllTargets) {</span>
+<span class="nc" id="L342">			buildCommands.add(&quot;-alltargets&quot;);</span>
 		}
-<span class="pc bpc" id="L300" title="3 of 4 branches missed.">		if (xcodeWorkspace != null &amp;&amp; !xcodeWorkspace.isEmpty()) {</span>
-<span class="nc" id="L301">			buildCommands.add(&quot;-workspace&quot;);</span>
-<span class="nc" id="L302">			buildCommands.add(xcodeWorkspace);</span>
+<span class="pc bpc" id="L344" title="3 of 4 branches missed.">		if (xcodeWorkspace != null &amp;&amp; !xcodeWorkspace.isEmpty()) {</span>
+<span class="nc" id="L345">			buildCommands.add(&quot;-workspace&quot;);</span>
+<span class="nc" id="L346">			buildCommands.add(xcodeWorkspace);</span>
 		}
-<span class="pc bpc" id="L304" title="3 of 4 branches missed.">		if (xcodeDestinationTimeout != null &amp;&amp; xcodeDestinationTimeout &gt; 0) {</span>
-<span class="nc" id="L305">			buildCommands.add(&quot;-destination-timeout&quot;);</span>
-<span class="nc" id="L306">			buildCommands.add(xcodeDestinationTimeout.toString());</span>
+<span class="pc bpc" id="L348" title="3 of 4 branches missed.">		if (xcodeDestinationTimeout != null &amp;&amp; xcodeDestinationTimeout &gt; 0) {</span>
+<span class="nc" id="L349">			buildCommands.add(&quot;-destination-timeout&quot;);</span>
+<span class="nc" id="L350">			buildCommands.add(xcodeDestinationTimeout.toString());</span>
 		}
-<span class="pc bpc" id="L308" title="3 of 4 branches missed.">		if (xcodeConfigurationName != null &amp;&amp; !xcodeConfigurationName.isEmpty()) {</span>
-<span class="nc" id="L309">			buildCommands.add(&quot;-configuration&quot;);</span>
-<span class="nc" id="L310">			buildCommands.add(xcodeConfigurationName);</span>
+<span class="pc bpc" id="L352" title="3 of 4 branches missed.">		if (xcodeConfigurationName != null &amp;&amp; !xcodeConfigurationName.isEmpty()) {</span>
+<span class="nc" id="L353">			buildCommands.add(&quot;-configuration&quot;);</span>
+<span class="nc" id="L354">			buildCommands.add(xcodeConfigurationName);</span>
 		}
-<span class="pc bpc" id="L312" title="3 of 4 branches missed.">		if (xcodeDerivedDataPath != null &amp;&amp; !xcodeDerivedDataPath.isEmpty()) {</span>
-<span class="nc" id="L313">			buildCommands.add(&quot;-derivedDataPath&quot;);</span>
-<span class="nc" id="L314">			buildCommands.add(xcodeDerivedDataPath);</span>
+<span class="pc bpc" id="L356" title="3 of 4 branches missed.">		if (xcodeDerivedDataPath != null &amp;&amp; !xcodeDerivedDataPath.isEmpty()) {</span>
+<span class="nc" id="L357">			buildCommands.add(&quot;-derivedDataPath&quot;);</span>
+<span class="nc" id="L358">			buildCommands.add(xcodeDerivedDataPath);</span>
 		}
-<span class="pc bpc" id="L316" title="3 of 4 branches missed.">		if (xcodeResultBundlePath != null &amp;&amp; !xcodeResultBundlePath.isEmpty()) {</span>
-<span class="nc" id="L317">			buildCommands.add(&quot;-resultBundlePath&quot;);</span>
-<span class="nc" id="L318">			buildCommands.add(xcodeResultBundlePath);</span>
+<span class="pc bpc" id="L360" title="3 of 4 branches missed.">		if (xcodeResultBundlePath != null &amp;&amp; !xcodeResultBundlePath.isEmpty()) {</span>
+<span class="nc" id="L361">			buildCommands.add(&quot;-resultBundlePath&quot;);</span>
+<span class="nc" id="L362">			buildCommands.add(xcodeResultBundlePath);</span>
 		}
-<span class="pc bpc" id="L320" title="3 of 4 branches missed.">		if (xcodeXcconfig != null &amp;&amp; !xcodeXcconfig.isEmpty()) {</span>
-<span class="nc" id="L321">			buildCommands.add(&quot;-xcconfig&quot;);</span>
-<span class="nc" id="L322">			buildCommands.add(xcodeXcconfig);</span>
+<span class="pc bpc" id="L364" title="3 of 4 branches missed.">		if (xcodeXcconfig != null &amp;&amp; !xcodeXcconfig.isEmpty()) {</span>
+<span class="nc" id="L365">			buildCommands.add(&quot;-xcconfig&quot;);</span>
+<span class="nc" id="L366">			buildCommands.add(xcodeXcconfig);</span>
 		}
-<span class="pc bpc" id="L324" title="1 of 2 branches missed.">		if (xcodeSkipUnavailableActions) {</span>
-<span class="nc" id="L325">			buildCommands.add(&quot;-skipUnavailableActions&quot;);</span>
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">		if (xcodeSkipUnavailableActions) {</span>
+<span class="nc" id="L369">			buildCommands.add(&quot;-skipUnavailableActions&quot;);</span>
 		}
-<span class="pc bpc" id="L327" title="1 of 2 branches missed.">		if (buildSettings != null) {</span>
-<span class="nc bnc" id="L328" title="All 2 branches missed.">			for (String key : buildSettings.keySet()) {</span>
-<span class="nc" id="L329">				buildCommands.add(key + &quot;=&quot; + buildSettings.get(key));</span>
-<span class="nc" id="L330">			}</span>
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">		if (buildSettings != null) {</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			for (String key : buildSettings.keySet()) {</span>
+<span class="nc" id="L373">				buildCommands.add(key + &quot;=&quot; + buildSettings.get(key));</span>
+<span class="nc" id="L374">			}</span>
 		}
-<span class="pc bpc" id="L332" title="1 of 2 branches missed.">		if (userDefaults != null) {</span>
-<span class="nc bnc" id="L333" title="All 2 branches missed.">			for (String key : userDefaults.keySet()) {</span>
-<span class="nc" id="L334">				buildCommands.add(&quot;-&quot; + key + &quot;=&quot; + userDefaults.get(key));</span>
-<span class="nc" id="L335">			}</span>
+<span class="pc bpc" id="L376" title="1 of 2 branches missed.">		if (userDefaults != null) {</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			for (String key : userDefaults.keySet()) {</span>
+<span class="nc" id="L378">				buildCommands.add(&quot;-&quot; + key + &quot;=&quot; + userDefaults.get(key));</span>
+<span class="nc" id="L379">			}</span>
 		}
-<span class="fc" id="L337">		return buildCommands;</span>
+<span class="fc" id="L381">		return buildCommands;</span>
 	}
 
 }

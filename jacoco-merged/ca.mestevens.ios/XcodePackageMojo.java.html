@@ -43,39 +43,42 @@ public class XcodePackageMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {		
 		try {
 <span class="fc" id="L45">			String packaging = project.getPackaging();</span>
-<span class="fc" id="L46">			String packagedFileName = artifactName + &quot;.&quot; + packaging;</span>
-<span class="fc" id="L47">			File zippedFile = new File(targetDirectory + &quot;/&quot; + packagedFileName);</span>
-<span class="fc" id="L48">			List&lt;String&gt; inputFiles = new ArrayList&lt;String&gt;();</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">			if (packaging.equals(&quot;xcode-framework&quot;)) {</span>
-<span class="fc" id="L50">				inputFiles.add(artifactName + &quot;.framework&quot;);</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">			if (&quot;xcode-framework&quot;.equals(packaging)) {</span>
+<span class="nc" id="L47">				packaging = &quot;xcode-dynamic-framework&quot;;</span>
+			}
+<span class="fc" id="L49">			String packagedFileName = artifactName + &quot;.&quot; + packaging;</span>
+<span class="fc" id="L50">			File zippedFile = new File(targetDirectory + &quot;/&quot; + packagedFileName);</span>
+<span class="fc" id="L51">			List&lt;String&gt; inputFiles = new ArrayList&lt;String&gt;();</span>
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">			if (packaging.equals(&quot;xcode-dynamic-framework&quot;) || packaging.equals(&quot;xcode-static-framework&quot;)) {</span>
+<span class="fc" id="L53">				inputFiles.add(artifactName + &quot;.framework&quot;);</span>
 			} else {
-<span class="fc" id="L52">				inputFiles.add(&quot;lib&quot; + artifactName + &quot;.a&quot;);</span>
-<span class="fc" id="L53">				inputFiles.add(&quot;headers&quot;);</span>
+<span class="fc" id="L55">				inputFiles.add(&quot;lib&quot; + artifactName + &quot;.a&quot;);</span>
+<span class="fc" id="L56">				inputFiles.add(&quot;headers&quot;);</span>
 			}
-<span class="fc bfc" id="L55" title="All 2 branches covered.">			if (zippedFile.exists()) {</span>
-<span class="fc" id="L56">				FileUtils.deleteDirectory(zippedFile);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">			if (zippedFile.exists()) {</span>
+<span class="fc" id="L59">				FileUtils.deleteDirectory(zippedFile);</span>
 			}
-<span class="fc" id="L58">			List&lt;String&gt; zipCommand = new ArrayList&lt;String&gt;();</span>
-<span class="fc" id="L59">			zipCommand.add(&quot;zip&quot;);</span>
-<span class="fc" id="L60">			zipCommand.add(&quot;-r&quot;);</span>
-<span class="fc" id="L61">			zipCommand.add(packagedFileName);</span>
-<span class="fc bfc" id="L62" title="All 2 branches covered.">			for(String inputFile : inputFiles) {</span>
-<span class="fc" id="L63">				zipCommand.add(inputFile);</span>
-<span class="fc" id="L64">			}</span>
-<span class="fc" id="L65">			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));</span>
+<span class="fc" id="L61">			List&lt;String&gt; zipCommand = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L62">			zipCommand.add(&quot;zip&quot;);</span>
+<span class="fc" id="L63">			zipCommand.add(&quot;-r&quot;);</span>
+<span class="fc" id="L64">			zipCommand.add(packagedFileName);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">			for(String inputFile : inputFiles) {</span>
+<span class="fc" id="L66">				zipCommand.add(inputFile);</span>
+<span class="fc" id="L67">			}</span>
+<span class="fc" id="L68">			int returnValue = processRunner.runProcess(targetDirectory, zipCommand.toArray(new String[zipCommand.size()]));</span>
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">			if (returnValue != 0) {</span>
-<span class="fc" id="L68">				getLog().error(&quot;Could not zip file: &quot; + artifactName);</span>
-<span class="fc" id="L69">				throw new MojoFailureException(&quot;Could not zip file: &quot; + artifactName);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">			if (returnValue != 0) {</span>
+<span class="fc" id="L71">				getLog().error(&quot;Could not zip file: &quot; + artifactName);</span>
+<span class="fc" id="L72">				throw new MojoFailureException(&quot;Could not zip file: &quot; + artifactName);</span>
 			}
 			
-<span class="fc" id="L72">			project.getArtifact().setFile(zippedFile);</span>
-<span class="nc" id="L73">		} catch (IOException e) {</span>
-<span class="nc" id="L74">			getLog().error(&quot;Error deleting directory&quot;);</span>
-<span class="nc" id="L75">			getLog().error(e.getMessage());</span>
-<span class="nc" id="L76">			throw new MojoFailureException(&quot;Error deleting directory&quot;);</span>
-<span class="fc" id="L77">		}</span>
-<span class="fc" id="L78">	}</span>
+<span class="fc" id="L75">			project.getArtifact().setFile(zippedFile);</span>
+<span class="nc" id="L76">		} catch (IOException e) {</span>
+<span class="nc" id="L77">			getLog().error(&quot;Error deleting directory&quot;);</span>
+<span class="nc" id="L78">			getLog().error(e.getMessage());</span>
+<span class="nc" id="L79">			throw new MojoFailureException(&quot;Error deleting directory&quot;);</span>
+<span class="fc" id="L80">		}</span>
+<span class="fc" id="L81">	}</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>
