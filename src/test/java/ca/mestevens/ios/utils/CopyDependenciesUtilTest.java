@@ -3,6 +3,7 @@ package ca.mestevens.ios.utils;
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
@@ -62,8 +63,10 @@ public class CopyDependenciesUtilTest {
 		when(mockMavenProject.getArtifacts()).thenReturn(mockArtifacts);
 		when(mockArtifact.getType()).thenReturn(null);
 		
-		List<File> dependencies = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
-		assertTrue(dependencies.isEmpty());
+		Map<String, List<File>> dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
+		assertTrue(dependencyMap.get("libraries").isEmpty());
+		assertTrue(dependencyMap.get("static-frameworks").isEmpty());
+		assertTrue(dependencyMap.get("dynamic-frameworks").isEmpty());
 		
 		verify(mockArtifact, times(0)).getFile();
 	}
@@ -77,8 +80,10 @@ public class CopyDependenciesUtilTest {
 		when(mockMavenProject.getArtifacts()).thenReturn(mockArtifacts);
 		when(mockArtifact.getType()).thenReturn("jar");
 		
-		List<File> dependencies = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
-		assertTrue(dependencies.isEmpty());
+		Map<String, List<File>> dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
+		assertTrue(dependencyMap.get("libraries").isEmpty());
+		assertTrue(dependencyMap.get("static-frameworks").isEmpty());
+		assertTrue(dependencyMap.get("dynamic-frameworks").isEmpty());
 		
 		verify(mockArtifact, times(0)).getFile();
 	}
@@ -108,9 +113,11 @@ public class CopyDependenciesUtilTest {
 		when(mockLibraryFile.getAbsolutePath()).thenReturn("libraryAbsPath");
 		
 		when(mockMavenProject.getArtifacts()).thenReturn(mockArtifacts);
-		List<File> dependencies = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
+		Map<String, List<File>> dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
 		
-		assertEquals(dependencies.size(), 2);
+		assertEquals(dependencyMap.get("libraries").size(), 1);
+		assertEquals(dependencyMap.get("dynamic-frameworks").size(), 1);
+		assertTrue(dependencyMap.get("static-frameworks").isEmpty());
 		verify(mockProcessRunner, times(1)).runProcess(null, "unzip", "frameworkAbsPath", "-d", "/test-directory/xcode-dependencies/frameworks/com.test.framework/framework");
 		verify(mockProcessRunner, times(1)).runProcess(null, "unzip", "libraryAbsPath", "-d", "/test-directory/xcode-dependencies/libraries/com.test.library/library");
 	}

@@ -21,6 +21,7 @@ import ca.mestevens.ios.utils.XcodeProjectUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Goal which generates your framework dependencies in the target directory.
@@ -88,7 +89,7 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 		
 		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);
 		
-		List<File> dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
+		Map<String, List<File>> dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.COMPILE);
 		if (addDependencies) {
 			try {
 				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
@@ -99,7 +100,7 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 					dependencyTargets.add(project.getArtifactId());
 				}
 				for (String target : dependencyTargets) {
-					projectUtil.addDependenciesToTarget(target, dependencyFiles);
+					projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
 				}
 				if (addTestDependencies) {
 					if (dependencyTestTargets == null) {
@@ -109,7 +110,7 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 						dependencyTestTargets.add(project.getArtifactId() + "Tests");
 					}
 					for (String target : dependencyTestTargets) {
-						projectUtil.addDependenciesToTarget(target, dependencyFiles);
+						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
 					}
 				}
 				projectUtil.writeProject();

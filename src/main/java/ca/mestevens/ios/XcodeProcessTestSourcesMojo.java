@@ -3,6 +3,7 @@ package ca.mestevens.ios;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -82,7 +83,7 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 		
 		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);
 		
-		List<File> dependencyFiles = copyDependenciesUtil.copyDependencies(JavaScopes.TEST);
+		Map<String, List<File>> dependencyMap = copyDependenciesUtil.copyDependencies(JavaScopes.TEST);
 		if (addDependencies) {
 			try {
 				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
@@ -94,7 +95,7 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 						dependencyTestTargets.add(project.getArtifactId() + "Tests");
 					}
 					for (String target : dependencyTestTargets) {
-						projectUtil.addDependenciesToTarget(target, dependencyFiles);
+						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
 					}
 				}
 				projectUtil.writeProject();
