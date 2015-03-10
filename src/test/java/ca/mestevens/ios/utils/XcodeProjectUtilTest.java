@@ -46,8 +46,8 @@ public class XcodeProjectUtilTest {
 		
 		assertEquals(projectUtil.getXcodeProject().fileReferences.size(), numberOfFileReferences + 1);
 		assertNotNull(projectUtil.getXcodeProject().getFileReferenceWithPath(path));
-		assertEquals(projectUtil.getXcodeProject().buildFiles.size(), numberOfBuildFiles + 2);
-		assertEquals(projectUtil.getXcodeProject().getBuildFileWithFileRefPath(path).size(), 2);
+		assertEquals(projectUtil.getXcodeProject().buildFiles.size(), numberOfBuildFiles + 1);
+		assertEquals(projectUtil.getXcodeProject().getBuildFileWithFileRefPath(path).size(), 1);
 		assertEquals(projectUtil.getXcodeProject().groups.size(), numberOfGroups + 1);
 		assertEquals(projectUtil.getXcodeProject().copyFilesBuildPhases.size(), numberOfCopyFilePhases + 1);
 		
@@ -67,15 +67,15 @@ public class XcodeProjectUtilTest {
 		
 		assertEquals(projectUtil.getXcodeProject().fileReferences.size(), numberOfFileReferences + 1);
 		assertNotNull(projectUtil.getXcodeProject().getFileReferenceWithPath(path));
-		assertEquals(projectUtil.getXcodeProject().buildFiles.size(), numberOfBuildFiles + 2);
-		assertEquals(projectUtil.getXcodeProject().getBuildFileWithFileRefPath(path).size(), 2);
+		assertEquals(projectUtil.getXcodeProject().buildFiles.size(), numberOfBuildFiles + 1);
+		assertEquals(projectUtil.getXcodeProject().getBuildFileWithFileRefPath(path).size(), 1);
 		
 		projectUtil.addDependenciesToTarget("testProject", dependencies, null, null);
 		
 		assertEquals(projectUtil.getXcodeProject().fileReferences.size(), numberOfFileReferences + 1);
 		assertNotNull(projectUtil.getXcodeProject().getFileReferenceWithPath(path));
-		assertEquals(projectUtil.getXcodeProject().buildFiles.size(), numberOfBuildFiles + 2);
-		assertEquals(projectUtil.getXcodeProject().getBuildFileWithFileRefPath(path).size(), 2);
+		assertEquals(projectUtil.getXcodeProject().buildFiles.size(), numberOfBuildFiles + 1);
+		assertEquals(projectUtil.getXcodeProject().getBuildFileWithFileRefPath(path).size(), 1);
 	}
 	
 	@Test
