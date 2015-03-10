@@ -245,15 +245,27 @@ public class XcodeBuildMojo extends AbstractMojo {
 					lipoCommand.add("lib" + artifactName + ".a");
 					libraryLocation =  "lib" + artifactName + ".a";
 				}
+				boolean fileExists = false;
 				for (String simulatorArch : simulatorArchs) {
 					lipoCommand.add("iphonesimulator-" + simulatorArch + "/" + libraryLocation);
+					File file = new File(targetDirectory + "/iphonesimulator-" + simulatorArch + "/" + libraryLocation);
+					if(file.exists()) {
+						fileExists = true;
+					}
 				}
 				for (String deviceArch : deviceArchs) {
 					lipoCommand.add("iphoneos-" + deviceArch + "/" + libraryLocation);
+					File file = new File(targetDirectory + "/iphoneos-" + deviceArch + "/" + libraryLocation);
+					if(file.exists()) {
+						fileExists = true;
+					}
 				}
 
-				returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
-				checkReturnValue(returnValue);
+				if (fileExists || !packaging.equals("xcode-static-framework")) {
+					returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
+					checkReturnValue(returnValue);
+				}
+
 				if (packaging.equals("xcode-dynamic-framework")) {
 					if (buildDevice) {
 						processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/" + artifactName + ".framework", ".");
@@ -263,7 +275,9 @@ public class XcodeBuildMojo extends AbstractMojo {
 					processRunner.runProcess(targetDirectory, "cp", artifactName, artifactName + ".framework/.");
 				} else if (packaging.equals("xcode-static-framework")) {
 					processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "Headers");
-					processRunner.runProcess(targetDirectory, "mv", libraryLocation, artifactName);
+					if (fileExists) {
+						processRunner.runProcess(targetDirectory, "mv", libraryLocation, artifactName);
+					}
 					File frameworkFile = new File(targetDirectory + "/" + artifactName + ".framework");
 					if (frameworkFile.exists()) {
 						try {
@@ -275,7 +289,11 @@ public class XcodeBuildMojo extends AbstractMojo {
 						}
 					}
 					processRunner.runProcess(targetDirectory, "mkdir", artifactName + ".framework");
-					processRunner.runProcess(targetDirectory, "cp", "-R", "Headers", artifactName, artifactName + ".framework");
+					if (fileExists) {
+						processRunner.runProcess(targetDirectory, "cp", "-R", "Headers", artifactName, artifactName + ".framework");
+					} else {
+						processRunner.runProcess(targetDirectory, "cp", "-R", "Headers", artifactName + ".framework");
+					}
 				} else if (packaging.equals("xcode-library")) {
 					processRunner.runProcess(targetDirectory, "cp", "-r", "iphoneos-" + deviceArchs.get(0) + "/include", "headers");
 				}

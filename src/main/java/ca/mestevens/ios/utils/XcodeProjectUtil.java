@@ -114,6 +114,13 @@ public class XcodeProjectUtil {
 		//Add the framework files as file references and build files
 		List<CommentedIdentifier> buildFileReferences = new ArrayList<CommentedIdentifier>();
 		for (File dependencyFile : files) {
+			String fileExtension = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf('.') + 1);
+			if (fileExtension.equals("framework") && !dynamicFrameworks) {
+				File staticLibrary = new File(dependencyFile.getAbsolutePath() + "/" + dependencyFile.getName().substring(0, dependencyFile.getName().lastIndexOf(".")));
+				if (!staticLibrary.exists()) {
+					continue;
+				}
+			}
 			String frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf("target"));
 			List<PBXBuildFile> buildFiles = xcodeProject.getBuildFileWithFileRefPath(frameworkPath);
 			if (buildFiles.isEmpty()) {
