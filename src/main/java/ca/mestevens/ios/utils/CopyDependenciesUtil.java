@@ -3,7 +3,9 @@ package ca.mestevens.ios.utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
@@ -24,11 +26,14 @@ public class CopyDependenciesUtil {
 		this.processRunner = processRunner;
 	}
 	
-	public List<File> copyDependencies(final String scope) throws MojoFailureException {
+	public Map<String, List<File>> copyDependencies(final String scope) throws MojoFailureException {
 		log.info("Starting execution");
 		
 		Set<Artifact> artifacts = project.getArtifacts();
-		List<File> dependencyFiles = new ArrayList<File>();
+		Map<String, List<File>> dependencyMap = new HashMap<String, List<File>>();
+		List<File> libraryFiles = new ArrayList<File>();
+		List<File> dynamicFrameworkFiles = new ArrayList<File>();
+		List<File> staticFrameworkFiles = new ArrayList<File>();
 		for (Artifact artifact : artifacts) {
 			String type = artifact.getType();
 			if ("xcode-framework".equals(type)) {
@@ -55,10 +60,12 @@ public class CopyDependenciesUtil {
 					
 					processRunner.runProcess(null, "unzip", file.getAbsolutePath(), "-d", resultFile.getAbsolutePath());
 					
-					if (type.equals("xcode-dynamic-framework") || type.equals("xcode-static-framework")) {
-						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
+					if (type.equals("xcode-dynamic-framework")) {
+						dynamicFrameworkFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
+					} else if (type.equals("xcode-static-framework")) {
+						staticFrameworkFiles.add(new File(resultFile.getAbsolutePath() + "/" + artifact.getArtifactId() + ".framework"));
 					} else if (type.equals("xcode-library")) {
-						dependencyFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));
+						libraryFiles.add(new File(resultFile.getAbsolutePath() + "/lib" + artifact.getArtifactId() + ".a"));
 					}
 					
 				} catch (IOException e) {
@@ -68,8 +75,10 @@ public class CopyDependenciesUtil {
 				}
 			}
 		}
-		
-		return dependencyFiles;
+		dependencyMap.put("libraries", libraryFiles);
+		dependencyMap.put("static-frameworks", staticFrameworkFiles);
+		dependencyMap.put("dynamic-frameworks", dynamicFrameworkFiles);
+		return dependencyMap;
 	}
 
 }
