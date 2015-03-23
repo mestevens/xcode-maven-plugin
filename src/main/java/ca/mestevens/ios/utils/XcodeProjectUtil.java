@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import lombok.Data;
@@ -126,6 +127,28 @@ public class XcodeProjectUtil {
 			if (buildFiles.isEmpty()) {
 				buildFiles = xcodeProject.getBuildFileWithFileRefPath("\"" + frameworkPath + "\"");
 			}
+			//Check for duplicates and remove them
+			if (buildFiles.size() > 1) {
+				Iterator<PBXBuildFile> buildFileIterator = buildFiles.iterator();
+				List<PBXBuildFile> uniqueBuildFiles = new ArrayList<PBXBuildFile>();
+				uniqueBuildFiles.add(buildFileIterator.next());
+				while(buildFileIterator.hasNext()) {
+					PBXBuildFile nextBuildFile = buildFileIterator.next();
+					boolean foundBuildFile = false;
+					for(PBXBuildFile uniqueBuildFile : uniqueBuildFiles) {
+						if (uniqueBuildFile.getFileRef().equals(nextBuildFile.getFileRef()) && uniqueBuildFile.getSettings().equals(nextBuildFile.getSettings())) {
+							foundBuildFile = true;
+						}
+					}
+					if (foundBuildFile) {
+						//Remove the file
+						buildFileIterator.remove();
+						removeBuildFile(nextBuildFile.getReference().getIdentifier());
+					} else {
+						uniqueBuildFiles.add(nextBuildFile);
+					}
+				}
+			}
 			PBXBuildFile buildFile = null;
 			for (PBXBuildFile existingFile : buildFiles) {
 				if (existingFile.getReference().getComment().contains(dependencyFile.getName() + " in Frameworks")) {
@@ -203,7 +226,7 @@ public class XcodeProjectUtil {
 		PBXBuildPhase frameworksBuildPhase = xcodeProject.getFrameworksBuildPhaseWithIdentifier(existingFrameworksPhaseId);
 		if (frameworksBuildPhase.getReference().getIdentifier().equals(existingFrameworksPhaseId)) {
 			for(CommentedIdentifier identifier : identifiers) {
-				if (!frameworksBuildPhase.getFiles().contains(identifier)) {
+				if (!frameworksBuildPhase.getFiles().contains(identifier) && !frameworksBuildPhase.getFiles().contains("\"" + identifier + "\"")) {
 					frameworksBuildPhase.getFiles().add(identifier);
 				}
 			}
@@ -235,7 +258,7 @@ public class XcodeProjectUtil {
 				foundExistingPhase = true;
 			}
 		}
-		if (!foundExistingPhase) {
+		if (!foundExistingPhase && identifiers.size() > 0) {
 			PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase("PBXCopyFilesBuildPhase", "\"Embed Frameworks\"", identifiers, "\"\"", 10);
 			xcodeProject.addCopyFilesBuildPhase(target.getReference().getIdentifier(), copyFrameworksBuildPhase);
 		}
@@ -248,6 +271,47 @@ public class XcodeProjectUtil {
 			}
 		}
 		return null;
+	}
+	
+	public void removeBuildFile(String identifier) {
+		List<PBXBuildFile> buildFiles = xcodeProject.getBuildFiles();
+		Iterator<PBXBuildFile> buildFileIt = buildFiles.iterator();
+		while(buildFileIt.hasNext()) {
+			PBXBuildFile buildFile = buildFileIt.next();
+			if (buildFile.getReference().getIdentifier().equals(identifier)) {
+				buildFileIt.remove();
+			}
+		}
+		List<PBXFileElement> groups = xcodeProject.getGroups();
+		for (PBXFileElement group : groups) {
+			Iterator<CommentedIdentifier> commentedIdentifierIt = group.getChildren().iterator();
+			while(commentedIdentifierIt.hasNext()) {
+				CommentedIdentifier commentedIdentifier = commentedIdentifierIt.next();
+				if (commentedIdentifier.getIdentifier().equals(identifier)) {
+					commentedIdentifierIt.remove();
+				}
+			}
+		}
+		List<PBXBuildPhase> frameworksBuildPhases = xcodeProject.getFrameworksBuildPhases();
+		for (PBXBuildPhase frameworksBuildPhase : frameworksBuildPhases) {
+			Iterator<CommentedIdentifier> commentedIdentifierIt = frameworksBuildPhase.getFiles().iterator();
+			while(commentedIdentifierIt.hasNext()) {
+				CommentedIdentifier commentedIdentifier = commentedIdentifierIt.next();
+				if (commentedIdentifier.getIdentifier().equals(identifier)) {
+					commentedIdentifierIt.remove();
+				}
+			}
+		}
+		List<PBXBuildPhase> copyFilesBuildPhases = xcodeProject.getCopyFilesBuildPhases();
+		for (PBXBuildPhase copyFilesBuildPhase : copyFilesBuildPhases) {
+			Iterator<CommentedIdentifier> commentedIdentifierIt = copyFilesBuildPhase.getFiles().iterator();
+			while(commentedIdentifierIt.hasNext()) {
+				CommentedIdentifier commentedIdentifier = commentedIdentifierIt.next();
+				if (commentedIdentifier.getIdentifier().equals(identifier)) {
+					commentedIdentifierIt.remove();
+				}
+			}
+		}
 	}
 	
 	public void writeProject() throws IOException {
