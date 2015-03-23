@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import lombok.Data;
@@ -21,238 +22,301 @@ import ca.mestevens.ios.xcode.parser.models.PBXTarget;
 import ca.mestevens.ios.xcode.parser.models.XCConfigurationList;
 import ca.mestevens.ios.xcode.parser.models.XCodeProject;
 
-<span class="nc bnc" id="L24" title="All 22 branches missed.">@Data</span>
+<span class="nc bnc" id="L25" title="All 22 branches missed.">@Data</span>
 public class XcodeProjectUtil {
 	
-<span class="nc" id="L27">	private String pbxProjLocation;</span>
-<span class="fc" id="L28">	private XCodeProject xcodeProject;</span>
+<span class="nc" id="L28">	private String pbxProjLocation;</span>
+<span class="fc" id="L29">	private XCodeProject xcodeProject;</span>
 	
-<span class="fc" id="L30">	public XcodeProjectUtil(String pbxProjLocation) throws InvalidObjectFormatException {</span>
-<span class="fc" id="L31">		this.pbxProjLocation = pbxProjLocation;</span>
-<span class="fc" id="L32">		this.xcodeProject = new XCodeProject(pbxProjLocation);</span>
-<span class="fc" id="L33">	}</span>
+<span class="fc" id="L31">	public XcodeProjectUtil(String pbxProjLocation) throws InvalidObjectFormatException {</span>
+<span class="fc" id="L32">		this.pbxProjLocation = pbxProjLocation;</span>
+<span class="fc" id="L33">		this.xcodeProject = new XCodeProject(pbxProjLocation);</span>
+<span class="fc" id="L34">	}</span>
 
 	public void addDependenciesToTarget(String targetName, List&lt;File&gt; dynamicFrameworks, List&lt;File&gt; staticFrameworks, List&lt;File&gt; libraries) throws MojoExecutionException {
 		try {
-<span class="fc" id="L37">			List&lt;File&gt; masterFileList = new ArrayList&lt;File&gt;();</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">			if (libraries == null) {</span>
-<span class="fc" id="L39">				libraries = new ArrayList&lt;File&gt;();</span>
+<span class="fc" id="L38">			List&lt;File&gt; masterFileList = new ArrayList&lt;File&gt;();</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">			if (libraries == null) {</span>
+<span class="fc" id="L40">				libraries = new ArrayList&lt;File&gt;();</span>
 			}
-<span class="pc bpc" id="L41" title="1 of 2 branches missed.">			if (staticFrameworks == null) {</span>
-<span class="fc" id="L42">				staticFrameworks = new ArrayList&lt;File&gt;();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">			if (staticFrameworks == null) {</span>
+<span class="fc" id="L43">				staticFrameworks = new ArrayList&lt;File&gt;();</span>
 			}
-<span class="fc bfc" id="L44" title="All 2 branches covered.">			if (dynamicFrameworks == null) {</span>
-<span class="fc" id="L45">				dynamicFrameworks = new ArrayList&lt;File&gt;();</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">			if (dynamicFrameworks == null) {</span>
+<span class="fc" id="L46">				dynamicFrameworks = new ArrayList&lt;File&gt;();</span>
 			}
-<span class="fc" id="L47">			masterFileList.addAll(libraries);</span>
-<span class="fc" id="L48">			masterFileList.addAll(staticFrameworks);</span>
-<span class="fc" id="L49">			masterFileList.addAll(dynamicFrameworks);</span>
+<span class="fc" id="L48">			masterFileList.addAll(libraries);</span>
+<span class="fc" id="L49">			masterFileList.addAll(staticFrameworks);</span>
+<span class="fc" id="L50">			masterFileList.addAll(dynamicFrameworks);</span>
 			//Add the file/build file references
-<span class="fc" id="L51">			List&lt;CommentedIdentifier&gt; fileReferenceIdentifiers = addFileReferences(masterFileList);</span>
-<span class="fc" id="L52">			List&lt;CommentedIdentifier&gt; libraryBuildIdentifiers = addBuildFiles(libraries, false);</span>
-<span class="fc" id="L53">			List&lt;CommentedIdentifier&gt; staticFrameworkBuildIdentifiers = addBuildFiles(staticFrameworks, false);</span>
-<span class="fc" id="L54">			List&lt;CommentedIdentifier&gt; dynamicFrameworkBuildIdentifiers = addBuildFiles(dynamicFrameworks, true);</span>
+<span class="fc" id="L52">			List&lt;CommentedIdentifier&gt; fileReferenceIdentifiers = addFileReferences(masterFileList);</span>
+<span class="fc" id="L53">			List&lt;CommentedIdentifier&gt; libraryBuildIdentifiers = addBuildFiles(libraries, false);</span>
+<span class="fc" id="L54">			List&lt;CommentedIdentifier&gt; staticFrameworkBuildIdentifiers = addBuildFiles(staticFrameworks, false);</span>
+<span class="fc" id="L55">			List&lt;CommentedIdentifier&gt; dynamicFrameworkBuildIdentifiers = addBuildFiles(dynamicFrameworks, true);</span>
 			//Get the target
-<span class="fc" id="L56">			PBXTarget target = getNativeTarget(targetName);</span>
+<span class="fc" id="L57">			PBXTarget target = getNativeTarget(targetName);</span>
 			//Link the static libraries
-<span class="fc" id="L58">			linkLibraries(target.getReference().getIdentifier(), libraryBuildIdentifiers);</span>
-<span class="fc" id="L59">			linkLibraries(target.getReference().getIdentifier(), staticFrameworkBuildIdentifiers);</span>
+<span class="fc" id="L59">			linkLibraries(target.getReference().getIdentifier(), libraryBuildIdentifiers);</span>
+<span class="fc" id="L60">			linkLibraries(target.getReference().getIdentifier(), staticFrameworkBuildIdentifiers);</span>
 			//Embed the dynamic libraries
-<span class="fc" id="L61">			embedLibraries(target, dynamicFrameworkBuildIdentifiers);</span>
+<span class="fc" id="L62">			embedLibraries(target, dynamicFrameworkBuildIdentifiers);</span>
 			//Add the properties to the build configuration
-<span class="fc" id="L63">			XCConfigurationList configuration = xcodeProject.getConfigurationListWithIdentifier(target.getBuildConfigurationList().getIdentifier());</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">			for(CommentedIdentifier identifier : configuration.getBuildConfigurations()) {</span>
-<span class="pc bpc" id="L65" title="3 of 8 branches missed.">				if ((dynamicFrameworks != null &amp;&amp; dynamicFrameworks.size() &gt; 0) || (staticFrameworks != null &amp;&amp; staticFrameworks.size() &gt; 0)) {</span>
-<span class="fc" id="L66">					addPropertyToList(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;, &quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;);</span>
-<span class="fc" id="L67">					addPropertyToString(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, &quot;@loader_path/Frameworks&quot;);</span>
-<span class="fc" id="L68">					addPropertyToString(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, &quot;@executable_path/Frameworks&quot;);</span>
+<span class="fc" id="L64">			XCConfigurationList configuration = xcodeProject.getConfigurationListWithIdentifier(target.getBuildConfigurationList().getIdentifier());</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">			for(CommentedIdentifier identifier : configuration.getBuildConfigurations()) {</span>
+<span class="pc bpc" id="L66" title="3 of 8 branches missed.">				if ((dynamicFrameworks != null &amp;&amp; dynamicFrameworks.size() &gt; 0) || (staticFrameworks != null &amp;&amp; staticFrameworks.size() &gt; 0)) {</span>
+<span class="fc" id="L67">					addPropertyToList(identifier.getIdentifier(), &quot;FRAMEWORK_SEARCH_PATHS&quot;, &quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/frameworks/**\&quot;&quot;);</span>
+<span class="fc" id="L68">					addPropertyToString(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, &quot;@loader_path/Frameworks&quot;);</span>
+<span class="fc" id="L69">					addPropertyToString(identifier.getIdentifier(), &quot;LD_RUNPATH_SEARCH_PATHS&quot;, &quot;@executable_path/Frameworks&quot;);</span>
 				}
-<span class="pc bpc" id="L70" title="1 of 4 branches missed.">				if (libraries != null &amp;&amp; libraries.size() &gt; 0) {</span>
-<span class="fc" id="L71">					addPropertyToList(identifier.getIdentifier(), &quot;HEADER_SEARCH_PATHS&quot;, &quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
-<span class="fc" id="L72">					addPropertyToList(identifier.getIdentifier(), &quot;LIBRARY_SEARCH_PATHS&quot;, &quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
+<span class="pc bpc" id="L71" title="1 of 4 branches missed.">				if (libraries != null &amp;&amp; libraries.size() &gt; 0) {</span>
+<span class="fc" id="L72">					addPropertyToList(identifier.getIdentifier(), &quot;HEADER_SEARCH_PATHS&quot;, &quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
+<span class="fc" id="L73">					addPropertyToList(identifier.getIdentifier(), &quot;LIBRARY_SEARCH_PATHS&quot;, &quot;\&quot;${PROJECT_DIR}/target/xcode-dependencies/libraries/**\&quot;&quot;);</span>
 				}
-<span class="fc" id="L74">			}</span>
-<span class="fc" id="L75">			createGroup(fileReferenceIdentifiers);</span>
-<span class="nc" id="L76">		} catch (Exception ex) {</span>
-<span class="nc" id="L77">			ex.printStackTrace();</span>
-<span class="nc" id="L78">			throw new MojoExecutionException(ex.getMessage());</span>
-<span class="fc" id="L79">		}</span>
-<span class="fc" id="L80">	}</span>
+<span class="fc" id="L75">			}</span>
+<span class="fc" id="L76">			createGroup(fileReferenceIdentifiers);</span>
+<span class="nc" id="L77">		} catch (Exception ex) {</span>
+<span class="nc" id="L78">			ex.printStackTrace();</span>
+<span class="nc" id="L79">			throw new MojoExecutionException(ex.getMessage());</span>
+<span class="fc" id="L80">		}</span>
+<span class="fc" id="L81">	}</span>
 	
 	public void addPropertyToList(String buildConfiguration, String key, String value) {
-<span class="fc" id="L83">		List&lt;String&gt; propertyList = xcodeProject.getBuildConfigurationPropertyAsList(buildConfiguration, key);</span>
-<span class="fc bfc" id="L84" title="All 2 branches covered.">		if (propertyList == null) {</span>
-<span class="fc" id="L85">			propertyList = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L84">		List&lt;String&gt; propertyList = xcodeProject.getBuildConfigurationPropertyAsList(buildConfiguration, key);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">		if (propertyList == null) {</span>
+<span class="fc" id="L86">			propertyList = new ArrayList&lt;String&gt;();</span>
 		}
-<span class="fc bfc" id="L87" title="All 2 branches covered.">		if (!propertyList.contains(value)) {</span>
-<span class="fc" id="L88">			propertyList.add(value);</span>
-<span class="fc" id="L89">			xcodeProject.setBuildConfigurationProperty(buildConfiguration, key, propertyList);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (!propertyList.contains(value)) {</span>
+<span class="fc" id="L89">			propertyList.add(value);</span>
+<span class="fc" id="L90">			xcodeProject.setBuildConfigurationProperty(buildConfiguration, key, propertyList);</span>
 		}
-<span class="fc" id="L91">	}</span>
+<span class="fc" id="L92">	}</span>
 	
 	public void addPropertyToString(String buildConfiguration, String key, String value) {
-<span class="fc" id="L94">		String property = xcodeProject.getBuildConfigurationProperty(buildConfiguration, key);</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">		if (property != null) {</span>
-<span class="pc bpc" id="L96" title="1 of 2 branches missed.">			if (property.startsWith(&quot;\&quot;&quot;)) {</span>
-<span class="fc" id="L97">				property = property.substring(1);</span>
+<span class="fc" id="L95">		String property = xcodeProject.getBuildConfigurationProperty(buildConfiguration, key);</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">		if (property != null) {</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">			if (property.startsWith(&quot;\&quot;&quot;)) {</span>
+<span class="fc" id="L98">				property = property.substring(1);</span>
 			}
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">			if (property.endsWith(&quot;\&quot;&quot;)) {</span>
-<span class="fc" id="L100">				property = property.substring(0, property.length() - 1);</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">			if (property.endsWith(&quot;\&quot;&quot;)) {</span>
+<span class="fc" id="L101">				property = property.substring(0, property.length() - 1);</span>
 			}
-<span class="fc" id="L102">			property = property.trim();</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">			if (!property.contains(value)) {</span>
-<span class="fc" id="L104">				property = property.concat(&quot; &quot; + value);</span>
+<span class="fc" id="L103">			property = property.trim();</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">			if (!property.contains(value)) {</span>
+<span class="fc" id="L105">				property = property.concat(&quot; &quot; + value);</span>
 			}
-<span class="fc" id="L106">			property = &quot;\&quot;&quot; + property + &quot;\&quot;&quot;;</span>
-<span class="fc" id="L107">			xcodeProject.setBuildConfigurationProperty(buildConfiguration, key, property);</span>
+<span class="fc" id="L107">			property = &quot;\&quot;&quot; + property + &quot;\&quot;&quot;;</span>
+<span class="fc" id="L108">			xcodeProject.setBuildConfigurationProperty(buildConfiguration, key, property);</span>
 		} else {
-<span class="fc" id="L109">			xcodeProject.setBuildConfigurationProperty(buildConfiguration, key, &quot;\&quot;&quot; + value + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L110">			xcodeProject.setBuildConfigurationProperty(buildConfiguration, key, &quot;\&quot;&quot; + value + &quot;\&quot;&quot;);</span>
 		}
-<span class="fc" id="L111">	}</span>
+<span class="fc" id="L112">	}</span>
 	
 	public List&lt;CommentedIdentifier&gt; addBuildFiles(List&lt;File&gt; files, boolean dynamicFrameworks) throws FileReferenceDoesNotExistException {
 		//Add the framework files as file references and build files
-<span class="fc" id="L115">		List&lt;CommentedIdentifier&gt; buildFileReferences = new ArrayList&lt;CommentedIdentifier&gt;();</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">		for (File dependencyFile : files) {</span>
-<span class="fc" id="L117">			String fileExtension = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf('.') + 1);</span>
-<span class="pc bpc" id="L118" title="1 of 4 branches missed.">			if (fileExtension.equals(&quot;framework&quot;) &amp;&amp; !dynamicFrameworks) {</span>
-<span class="nc" id="L119">				File staticLibrary = new File(dependencyFile.getAbsolutePath() + &quot;/&quot; + dependencyFile.getName().substring(0, dependencyFile.getName().lastIndexOf(&quot;.&quot;)));</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">				if (!staticLibrary.exists()) {</span>
-<span class="nc" id="L121">					continue;</span>
+<span class="fc" id="L116">		List&lt;CommentedIdentifier&gt; buildFileReferences = new ArrayList&lt;CommentedIdentifier&gt;();</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">		for (File dependencyFile : files) {</span>
+<span class="fc" id="L118">			String fileExtension = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf('.') + 1);</span>
+<span class="pc bpc" id="L119" title="1 of 4 branches missed.">			if (fileExtension.equals(&quot;framework&quot;) &amp;&amp; !dynamicFrameworks) {</span>
+<span class="nc" id="L120">				File staticLibrary = new File(dependencyFile.getAbsolutePath() + &quot;/&quot; + dependencyFile.getName().substring(0, dependencyFile.getName().lastIndexOf(&quot;.&quot;)));</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if (!staticLibrary.exists()) {</span>
+<span class="nc" id="L122">					continue;</span>
 				}
 			}
-<span class="fc" id="L124">			String frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf(&quot;target&quot;));</span>
-<span class="fc" id="L125">			List&lt;PBXBuildFile&gt; buildFiles = xcodeProject.getBuildFileWithFileRefPath(frameworkPath);</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">			if (buildFiles.isEmpty()) {</span>
-<span class="fc" id="L127">				buildFiles = xcodeProject.getBuildFileWithFileRefPath(&quot;\&quot;&quot; + frameworkPath + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L125">			String frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf(&quot;target&quot;));</span>
+<span class="fc" id="L126">			List&lt;PBXBuildFile&gt; buildFiles = xcodeProject.getBuildFileWithFileRefPath(frameworkPath);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">			if (buildFiles.isEmpty()) {</span>
+<span class="fc" id="L128">				buildFiles = xcodeProject.getBuildFileWithFileRefPath(&quot;\&quot;&quot; + frameworkPath + &quot;\&quot;&quot;);</span>
 			}
-<span class="fc" id="L129">			PBXBuildFile buildFile = null;</span>
-<span class="fc bfc" id="L130" title="All 2 branches covered.">			for (PBXBuildFile existingFile : buildFiles) {</span>
-<span class="fc bfc" id="L131" title="All 2 branches covered.">				if (existingFile.getReference().getComment().contains(dependencyFile.getName() + &quot; in Frameworks&quot;)) {</span>
-<span class="fc" id="L132">					buildFile = existingFile;</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">				} else if (existingFile.getReference().getComment().contains(dependencyFile.getName() + &quot; in Embed Frameworks&quot;)) {</span>
-<span class="fc" id="L134">					buildFile = existingFile;</span>
+			//Check for duplicates and remove them
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">			if (buildFiles.size() &gt; 1) {</span>
+<span class="nc" id="L132">				Iterator&lt;PBXBuildFile&gt; buildFileIterator = buildFiles.iterator();</span>
+<span class="nc" id="L133">				List&lt;PBXBuildFile&gt; uniqueBuildFiles = new ArrayList&lt;PBXBuildFile&gt;();</span>
+<span class="nc" id="L134">				uniqueBuildFiles.add(buildFileIterator.next());</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">				while(buildFileIterator.hasNext()) {</span>
+<span class="nc" id="L136">					PBXBuildFile nextBuildFile = buildFileIterator.next();</span>
+<span class="nc" id="L137">					boolean foundBuildFile = false;</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">					for(PBXBuildFile uniqueBuildFile : uniqueBuildFiles) {</span>
+<span class="nc bnc" id="L139" title="All 4 branches missed.">						if (uniqueBuildFile.getFileRef().equals(nextBuildFile.getFileRef()) &amp;&amp; uniqueBuildFile.getSettings().equals(nextBuildFile.getSettings())) {</span>
+<span class="nc" id="L140">							foundBuildFile = true;</span>
+						}
+<span class="nc" id="L142">					}</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">					if (foundBuildFile) {</span>
+						//Remove the file
+<span class="nc" id="L145">						buildFileIterator.remove();</span>
+<span class="nc" id="L146">						removeBuildFile(nextBuildFile.getReference().getIdentifier());</span>
+					} else {
+<span class="nc" id="L148">						uniqueBuildFiles.add(nextBuildFile);</span>
+					}
+<span class="nc" id="L150">				}</span>
+			}
+<span class="fc" id="L152">			PBXBuildFile buildFile = null;</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">			for (PBXBuildFile existingFile : buildFiles) {</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">				if (existingFile.getReference().getComment().contains(dependencyFile.getName() + &quot; in Frameworks&quot;)) {</span>
+<span class="fc" id="L155">					buildFile = existingFile;</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">				} else if (existingFile.getReference().getComment().contains(dependencyFile.getName() + &quot; in Embed Frameworks&quot;)) {</span>
+<span class="fc" id="L157">					buildFile = existingFile;</span>
 				}
-<span class="fc" id="L136">			}</span>
-<span class="fc bfc" id="L137" title="All 4 branches covered.">			if (buildFile == null &amp;&amp; dynamicFrameworks) {</span>
-<span class="fc" id="L138">				buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, dependencyFile.getName() + &quot; in Embed Frameworks&quot;);</span>
-<span class="fc" id="L139">				buildFile.getSettings().put(&quot;ATTRIBUTES&quot;, &quot;(CodeSignOnCopy, )&quot;);</span>
-<span class="fc bfc" id="L140" title="All 2 branches covered.">			} else if (buildFile == null) {</span>
-<span class="fc" id="L141">				buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, dependencyFile.getName() + &quot; in Frameworks&quot;);</span>
+<span class="fc" id="L159">			}</span>
+<span class="fc bfc" id="L160" title="All 4 branches covered.">			if (buildFile == null &amp;&amp; dynamicFrameworks) {</span>
+<span class="fc" id="L161">				buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, dependencyFile.getName() + &quot; in Embed Frameworks&quot;);</span>
+<span class="fc" id="L162">				buildFile.getSettings().put(&quot;ATTRIBUTES&quot;, &quot;(CodeSignOnCopy, )&quot;);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">			} else if (buildFile == null) {</span>
+<span class="fc" id="L164">				buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, dependencyFile.getName() + &quot; in Frameworks&quot;);</span>
 			}
-<span class="fc" id="L143">			buildFileReferences.add(buildFile.getReference());</span>
-<span class="fc" id="L144">		}</span>
-<span class="fc" id="L145">		return buildFileReferences;</span>
+<span class="fc" id="L166">			buildFileReferences.add(buildFile.getReference());</span>
+<span class="fc" id="L167">		}</span>
+<span class="fc" id="L168">		return buildFileReferences;</span>
 	}
 	
 	public List&lt;CommentedIdentifier&gt; addFileReferences(List&lt;File&gt; files) {
-<span class="fc" id="L149">		List&lt;CommentedIdentifier&gt; fileReferences = new ArrayList&lt;CommentedIdentifier&gt;();</span>
-<span class="fc bfc" id="L150" title="All 2 branches covered.">		for (File dependencyFile : files) {</span>
-<span class="fc" id="L151">			String frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf(&quot;target&quot;));</span>
-<span class="fc" id="L152">			PBXFileElement fileReference = xcodeProject.getFileReferenceWithPath(frameworkPath);</span>
-<span class="fc bfc" id="L153" title="All 2 branches covered.">			if (fileReference == null) {</span>
-<span class="fc" id="L154">				fileReference = xcodeProject.getFileReferenceWithPath(&quot;\&quot;&quot; + frameworkPath + &quot;\&quot;&quot;);</span>
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">				if (fileReference == null) {</span>
-<span class="fc" id="L156">					fileReference = xcodeProject.createFileReference(frameworkPath, &quot;SOURCE_ROOT&quot;);</span>
+<span class="fc" id="L172">		List&lt;CommentedIdentifier&gt; fileReferences = new ArrayList&lt;CommentedIdentifier&gt;();</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">		for (File dependencyFile : files) {</span>
+<span class="fc" id="L174">			String frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf(&quot;target&quot;));</span>
+<span class="fc" id="L175">			PBXFileElement fileReference = xcodeProject.getFileReferenceWithPath(frameworkPath);</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">			if (fileReference == null) {</span>
+<span class="fc" id="L177">				fileReference = xcodeProject.getFileReferenceWithPath(&quot;\&quot;&quot; + frameworkPath + &quot;\&quot;&quot;);</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">				if (fileReference == null) {</span>
+<span class="fc" id="L179">					fileReference = xcodeProject.createFileReference(frameworkPath, &quot;SOURCE_ROOT&quot;);</span>
 				}
 			}
-<span class="fc" id="L159">			fileReferences.add(fileReference.getReference());</span>
-<span class="fc" id="L160">		}</span>
-<span class="fc" id="L161">		return fileReferences;</span>
+<span class="fc" id="L182">			fileReferences.add(fileReference.getReference());</span>
+<span class="fc" id="L183">		}</span>
+<span class="fc" id="L184">		return fileReferences;</span>
 	}
 	
 	public void createGroup(List&lt;CommentedIdentifier&gt; identifiers) {
 		//Add/Edit the Frameworks group
-<span class="fc" id="L166">		String frameworkGroupIdentifier = null;</span>
-<span class="fc bfc" id="L167" title="All 2 branches covered.">		for(PBXFileElement group : xcodeProject.getGroups()) {</span>
-<span class="pc bpc" id="L168" title="1 of 6 branches missed.">			if (group.getName() != null &amp;&amp; (group.getName().equals(&quot;Frameworks&quot;) || group.getName().equals(&quot;\&quot;Frameworks\&quot;&quot;))) {</span>
-<span class="fc" id="L169">				frameworkGroupIdentifier = group.getReference().getIdentifier();</span>
+<span class="fc" id="L189">		String frameworkGroupIdentifier = null;</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">		for(PBXFileElement group : xcodeProject.getGroups()) {</span>
+<span class="pc bpc" id="L191" title="1 of 6 branches missed.">			if (group.getName() != null &amp;&amp; (group.getName().equals(&quot;Frameworks&quot;) || group.getName().equals(&quot;\&quot;Frameworks\&quot;&quot;))) {</span>
+<span class="fc" id="L192">				frameworkGroupIdentifier = group.getReference().getIdentifier();</span>
 			}
-<span class="fc" id="L171">		}</span>
+<span class="fc" id="L194">		}</span>
 		
-<span class="fc bfc" id="L173" title="All 2 branches covered.">		if (frameworkGroupIdentifier != null) {</span>
-<span class="fc" id="L174">			PBXFileElement frameworkGroup = xcodeProject.getGroupWithIdentifier(frameworkGroupIdentifier);</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">			for (CommentedIdentifier fileReference : identifiers) {</span>
-<span class="fc" id="L176">				boolean found = false;</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">				for (CommentedIdentifier child : frameworkGroup.getChildren()) {</span>
-<span class="pc bpc" id="L178" title="1 of 2 branches missed.">					if (child.getComment().equals(fileReference.getComment())) {</span>
-<span class="fc" id="L179">						found = true;</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">		if (frameworkGroupIdentifier != null) {</span>
+<span class="fc" id="L197">			PBXFileElement frameworkGroup = xcodeProject.getGroupWithIdentifier(frameworkGroupIdentifier);</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">			for (CommentedIdentifier fileReference : identifiers) {</span>
+<span class="fc" id="L199">				boolean found = false;</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">				for (CommentedIdentifier child : frameworkGroup.getChildren()) {</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">					if (child.getComment().equals(fileReference.getComment())) {</span>
+<span class="fc" id="L202">						found = true;</span>
 					}
-<span class="fc" id="L181">				}</span>
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">				if (!found) {</span>
-<span class="nc" id="L183">					frameworkGroup.addChild(fileReference);</span>
+<span class="fc" id="L204">				}</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">				if (!found) {</span>
+<span class="nc" id="L206">					frameworkGroup.addChild(fileReference);</span>
 				}
-<span class="fc" id="L185">			}</span>
-<span class="fc" id="L186">		} else {</span>
-<span class="fc" id="L187">			String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();</span>
-<span class="fc" id="L188">			xcodeProject.createGroup(&quot;Frameworks&quot;, identifiers, mainGroupIdentifier);</span>
+<span class="fc" id="L208">			}</span>
+<span class="fc" id="L209">		} else {</span>
+<span class="fc" id="L210">			String mainGroupIdentifier = xcodeProject.getProject().getMainGroup().getIdentifier();</span>
+<span class="fc" id="L211">			xcodeProject.createGroup(&quot;Frameworks&quot;, identifiers, mainGroupIdentifier);</span>
 		}
-<span class="fc" id="L190">	}</span>
+<span class="fc" id="L213">	}</span>
 	
 	public void linkLibraries(String targetIdentifier, List&lt;CommentedIdentifier&gt; identifiers) {
 		//Get the configuration list identifier for the first target
-<span class="fc" id="L194">		String existingFrameworksPhaseId = null;</span>
-<span class="fc" id="L195">		PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(targetIdentifier);</span>
-<span class="pc bpc" id="L196" title="1 of 2 branches missed.">		for(CommentedIdentifier buildPhaseIdentifier : nativeTarget.getBuildPhases()) {</span>
-<span class="fc bfc" id="L197" title="All 2 branches covered.">			if (buildPhaseIdentifier.getComment().equals(&quot;Frameworks&quot;)) {</span>
-<span class="fc" id="L198">				existingFrameworksPhaseId = buildPhaseIdentifier.getIdentifier();</span>
-<span class="fc" id="L199">				break;</span>
+<span class="fc" id="L217">		String existingFrameworksPhaseId = null;</span>
+<span class="fc" id="L218">		PBXTarget nativeTarget = xcodeProject.getNativeTargetWithIdentifier(targetIdentifier);</span>
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">		for(CommentedIdentifier buildPhaseIdentifier : nativeTarget.getBuildPhases()) {</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">			if (buildPhaseIdentifier.getComment().equals(&quot;Frameworks&quot;)) {</span>
+<span class="fc" id="L221">				existingFrameworksPhaseId = buildPhaseIdentifier.getIdentifier();</span>
+<span class="fc" id="L222">				break;</span>
 			}
-<span class="fc" id="L201">		}</span>
+<span class="fc" id="L224">		}</span>
 		//Add the framework build files to the frameworks build phase
-<span class="fc" id="L203">		PBXBuildPhase frameworksBuildPhase = xcodeProject.getFrameworksBuildPhaseWithIdentifier(existingFrameworksPhaseId);</span>
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">		if (frameworksBuildPhase.getReference().getIdentifier().equals(existingFrameworksPhaseId)) {</span>
-<span class="fc bfc" id="L205" title="All 2 branches covered.">			for(CommentedIdentifier identifier : identifiers) {</span>
-<span class="fc bfc" id="L206" title="All 2 branches covered.">				if (!frameworksBuildPhase.getFiles().contains(identifier)) {</span>
-<span class="fc" id="L207">					frameworksBuildPhase.getFiles().add(identifier);</span>
+<span class="fc" id="L226">		PBXBuildPhase frameworksBuildPhase = xcodeProject.getFrameworksBuildPhaseWithIdentifier(existingFrameworksPhaseId);</span>
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">		if (frameworksBuildPhase.getReference().getIdentifier().equals(existingFrameworksPhaseId)) {</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">			for(CommentedIdentifier identifier : identifiers) {</span>
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">				if (!frameworksBuildPhase.getFiles().contains(identifier) &amp;&amp; !frameworksBuildPhase.getFiles().contains(&quot;\&quot;&quot; + identifier + &quot;\&quot;&quot;)) {</span>
+<span class="fc" id="L230">					frameworksBuildPhase.getFiles().add(identifier);</span>
 				}
-<span class="fc" id="L209">			}</span>
+<span class="fc" id="L232">			}</span>
 		}
-<span class="fc" id="L211">	}</span>
+<span class="fc" id="L234">	}</span>
 	
 	public void embedLibraries(PBXTarget target, List&lt;CommentedIdentifier&gt; identifiers) {
 		//If the Embed Frameworks phase doesn't exist, create it
-<span class="fc" id="L215">		boolean foundExistingPhase = false;</span>
-<span class="fc" id="L216">		String copyFrameworksBuildPhaseIdentifier = null;</span>
-<span class="fc bfc" id="L217" title="All 2 branches covered.">		for(CommentedIdentifier buildPhase : target.getBuildPhases()) {</span>
-<span class="fc bfc" id="L218" title="All 2 branches covered.">			if (buildPhase.getComment().contains(&quot;Embed Frameworks&quot;)) {</span>
-<span class="fc" id="L219">				copyFrameworksBuildPhaseIdentifier = buildPhase.getIdentifier();</span>
+<span class="fc" id="L238">		boolean foundExistingPhase = false;</span>
+<span class="fc" id="L239">		String copyFrameworksBuildPhaseIdentifier = null;</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		for(CommentedIdentifier buildPhase : target.getBuildPhases()) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">			if (buildPhase.getComment().contains(&quot;Embed Frameworks&quot;)) {</span>
+<span class="fc" id="L242">				copyFrameworksBuildPhaseIdentifier = buildPhase.getIdentifier();</span>
 			}
-<span class="fc" id="L221">		}</span>
-<span class="fc bfc" id="L222" title="All 2 branches covered.">		for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {</span>
-<span class="pc bpc" id="L223" title="1 of 2 branches missed.">			if (copyFilesBuildPhase.getReference().getIdentifier().equals(copyFrameworksBuildPhaseIdentifier)) {</span>
-<span class="fc bfc" id="L224" title="All 2 branches covered.">				for(CommentedIdentifier identifier : identifiers) {</span>
-<span class="fc" id="L225">					boolean foundFile = false;</span>
-<span class="fc bfc" id="L226" title="All 2 branches covered.">					for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {</span>
-<span class="pc bpc" id="L227" title="1 of 2 branches missed.">						if (fileIdentifier.getComment().equals(identifier.getComment())) {</span>
-<span class="fc" id="L228">							foundFile = true;</span>
+<span class="fc" id="L244">		}</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">		for(PBXBuildPhase copyFilesBuildPhase : xcodeProject.getCopyFilesBuildPhases()) {</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">			if (copyFilesBuildPhase.getReference().getIdentifier().equals(copyFrameworksBuildPhaseIdentifier)) {</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">				for(CommentedIdentifier identifier : identifiers) {</span>
+<span class="fc" id="L248">					boolean foundFile = false;</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">					for (CommentedIdentifier fileIdentifier : copyFilesBuildPhase.getFiles()) {</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">						if (fileIdentifier.getComment().equals(identifier.getComment())) {</span>
+<span class="fc" id="L251">							foundFile = true;</span>
 						}
-<span class="fc" id="L230">					}</span>
-<span class="pc bpc" id="L231" title="1 of 2 branches missed.">					if (!foundFile) {</span>
-<span class="nc" id="L232">						copyFilesBuildPhase.getFiles().add(identifier);</span>
+<span class="fc" id="L253">					}</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">					if (!foundFile) {</span>
+<span class="nc" id="L255">						copyFilesBuildPhase.getFiles().add(identifier);</span>
 					}
-<span class="fc" id="L234">				}</span>
-<span class="fc" id="L235">				foundExistingPhase = true;</span>
+<span class="fc" id="L257">				}</span>
+<span class="fc" id="L258">				foundExistingPhase = true;</span>
 			}
-<span class="fc" id="L237">		}</span>
-<span class="fc bfc" id="L238" title="All 2 branches covered.">		if (!foundExistingPhase) {</span>
-<span class="fc" id="L239">			PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase(&quot;PBXCopyFilesBuildPhase&quot;, &quot;\&quot;Embed Frameworks\&quot;&quot;, identifiers, &quot;\&quot;\&quot;&quot;, 10);</span>
-<span class="fc" id="L240">			xcodeProject.addCopyFilesBuildPhase(target.getReference().getIdentifier(), copyFrameworksBuildPhase);</span>
+<span class="fc" id="L260">		}</span>
+<span class="fc bfc" id="L261" title="All 4 branches covered.">		if (!foundExistingPhase &amp;&amp; identifiers.size() &gt; 0) {</span>
+<span class="fc" id="L262">			PBXBuildPhase copyFrameworksBuildPhase = new PBXBuildPhase(&quot;PBXCopyFilesBuildPhase&quot;, &quot;\&quot;Embed Frameworks\&quot;&quot;, identifiers, &quot;\&quot;\&quot;&quot;, 10);</span>
+<span class="fc" id="L263">			xcodeProject.addCopyFilesBuildPhase(target.getReference().getIdentifier(), copyFrameworksBuildPhase);</span>
 		}
-<span class="fc" id="L242">	}</span>
+<span class="fc" id="L265">	}</span>
 	
 	public PBXTarget getNativeTarget(String targetName) {
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">		for (PBXTarget target : xcodeProject.getNativeTargets()) {</span>
-<span class="pc bpc" id="L246" title="4 of 6 branches missed.">			if (target.getName() != null &amp;&amp; (target.getName().equals(targetName) || target.getName().equals(&quot;\&quot;&quot; + targetName + &quot;\&quot;&quot;))) {</span>
-<span class="fc" id="L247">				return target;</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">		for (PBXTarget target : xcodeProject.getNativeTargets()) {</span>
+<span class="pc bpc" id="L269" title="4 of 6 branches missed.">			if (target.getName() != null &amp;&amp; (target.getName().equals(targetName) || target.getName().equals(&quot;\&quot;&quot; + targetName + &quot;\&quot;&quot;))) {</span>
+<span class="fc" id="L270">				return target;</span>
 			}
-<span class="nc" id="L249">		}</span>
-<span class="nc" id="L250">		return null;</span>
+<span class="nc" id="L272">		}</span>
+<span class="nc" id="L273">		return null;</span>
 	}
 	
+	public void removeBuildFile(String identifier) {
+<span class="nc" id="L277">		List&lt;PBXBuildFile&gt; buildFiles = xcodeProject.getBuildFiles();</span>
+<span class="nc" id="L278">		Iterator&lt;PBXBuildFile&gt; buildFileIt = buildFiles.iterator();</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		while(buildFileIt.hasNext()) {</span>
+<span class="nc" id="L280">			PBXBuildFile buildFile = buildFileIt.next();</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">			if (buildFile.getReference().getIdentifier().equals(identifier)) {</span>
+<span class="nc" id="L282">				buildFileIt.remove();</span>
+			}
+<span class="nc" id="L284">		}</span>
+<span class="nc" id="L285">		List&lt;PBXFileElement&gt; groups = xcodeProject.getGroups();</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		for (PBXFileElement group : groups) {</span>
+<span class="nc" id="L287">			Iterator&lt;CommentedIdentifier&gt; commentedIdentifierIt = group.getChildren().iterator();</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">			while(commentedIdentifierIt.hasNext()) {</span>
+<span class="nc" id="L289">				CommentedIdentifier commentedIdentifier = commentedIdentifierIt.next();</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				if (commentedIdentifier.getIdentifier().equals(identifier)) {</span>
+<span class="nc" id="L291">					commentedIdentifierIt.remove();</span>
+				}
+<span class="nc" id="L293">			}</span>
+<span class="nc" id="L294">		}</span>
+<span class="nc" id="L295">		List&lt;PBXBuildPhase&gt; frameworksBuildPhases = xcodeProject.getFrameworksBuildPhases();</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		for (PBXBuildPhase frameworksBuildPhase : frameworksBuildPhases) {</span>
+<span class="nc" id="L297">			Iterator&lt;CommentedIdentifier&gt; commentedIdentifierIt = frameworksBuildPhase.getFiles().iterator();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			while(commentedIdentifierIt.hasNext()) {</span>
+<span class="nc" id="L299">				CommentedIdentifier commentedIdentifier = commentedIdentifierIt.next();</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">				if (commentedIdentifier.getIdentifier().equals(identifier)) {</span>
+<span class="nc" id="L301">					commentedIdentifierIt.remove();</span>
+				}
+<span class="nc" id="L303">			}</span>
+<span class="nc" id="L304">		}</span>
+<span class="nc" id="L305">		List&lt;PBXBuildPhase&gt; copyFilesBuildPhases = xcodeProject.getCopyFilesBuildPhases();</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">		for (PBXBuildPhase copyFilesBuildPhase : copyFilesBuildPhases) {</span>
+<span class="nc" id="L307">			Iterator&lt;CommentedIdentifier&gt; commentedIdentifierIt = copyFilesBuildPhase.getFiles().iterator();</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">			while(commentedIdentifierIt.hasNext()) {</span>
+<span class="nc" id="L309">				CommentedIdentifier commentedIdentifier = commentedIdentifierIt.next();</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">				if (commentedIdentifier.getIdentifier().equals(identifier)) {</span>
+<span class="nc" id="L311">					commentedIdentifierIt.remove();</span>
+				}
+<span class="nc" id="L313">			}</span>
+<span class="nc" id="L314">		}</span>
+<span class="nc" id="L315">	}</span>
+	
 	public void writeProject() throws IOException {
-<span class="nc" id="L254">		Files.write(Paths.get(pbxProjLocation), xcodeProject.toString().getBytes());</span>
-<span class="nc" id="L255">	}</span>
+<span class="nc" id="L318">		Files.write(Paths.get(pbxProjLocation), xcodeProject.toString().getBytes());</span>
+<span class="nc" id="L319">	}</span>
 	
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.0.201403182114</span></div></body></html>
