@@ -103,14 +103,18 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 					projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
 				}
 				if (addTestDependencies) {
-					if (dependencyTestTargets == null) {
-						dependencyTestTargets = new ArrayList<String>();
-					}
-					if (dependencyTestTargets.isEmpty()) {
-						dependencyTestTargets.add(project.getArtifactId() + "Tests");
-					}
-					for (String target : dependencyTestTargets) {
-						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
+					if (!projectUtil.containsTestTarget()) {
+						getLog().info("No test target found.");
+					} else {
+						if (dependencyTestTargets == null) {
+							dependencyTestTargets = new ArrayList<String>();
+						}
+						if (dependencyTestTargets.isEmpty()) {
+							dependencyTestTargets.add(project.getArtifactId() + "Tests");
+						}
+						for (String target : dependencyTestTargets) {
+							projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
+						}
 					}
 				}
 				projectUtil.writeProject();

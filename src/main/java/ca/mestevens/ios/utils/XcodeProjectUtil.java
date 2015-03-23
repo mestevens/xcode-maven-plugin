@@ -32,6 +32,16 @@ public class XcodeProjectUtil {
 		this.pbxProjLocation = pbxProjLocation;
 		this.xcodeProject = new XCodeProject(pbxProjLocation);
 	}
+	
+	public boolean containsTestTarget() {
+		List<PBXTarget> targets = xcodeProject.getNativeTargets();
+		for(PBXTarget target : targets) {
+			if (target.getProductType() != null && target.getProductType().contains("com.apple.product-type.bundle.unit-test")) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public void addDependenciesToTarget(String targetName, List<File> dynamicFrameworks, List<File> staticFrameworks, List<File> libraries) throws MojoExecutionException {
 		try {
@@ -73,7 +83,9 @@ public class XcodeProjectUtil {
 					addPropertyToList(identifier.getIdentifier(), "LIBRARY_SEARCH_PATHS", "\"${PROJECT_DIR}/target/xcode-dependencies/libraries/**\"");
 				}
 			}
-			createGroup(fileReferenceIdentifiers);
+			if (fileReferenceIdentifiers.size() > 0) {
+				createGroup(fileReferenceIdentifiers);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new MojoExecutionException(ex.getMessage());

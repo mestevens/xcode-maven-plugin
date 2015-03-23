@@ -11,6 +11,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import ca.mestevens.ios.utils.ProcessRunner;
+import ca.mestevens.ios.utils.XcodeProjectUtil;
+import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
 
 /**
  * Goal to test your artifact(s).
@@ -64,6 +66,17 @@ public class XcodeTestMojo extends AbstractMojo {
 		if (skipTests) {
 			return;
 		}
+		
+		try {
+			XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
+			if (!projectUtil.containsTestTarget()) {
+				getLog().info("There were no test targets to run tests on.");
+				return;
+			}
+		} catch (InvalidObjectFormatException ex) {
+			throw new MojoFailureException(ex.getMessage());
+		}
+		
 		List<String> command = new ArrayList<String>();
 		command.add(xcodebuild);
 		command.add("-project");

@@ -26,9 +26,7 @@ public class CopyDependenciesUtil {
 		this.processRunner = processRunner;
 	}
 	
-	public Map<String, List<File>> copyDependencies(final String scope) throws MojoFailureException {
-		log.info("Starting execution");
-		
+	public Map<String, List<File>> copyDependencies(final String scope) throws MojoFailureException {		
 		Set<Artifact> artifacts = project.getArtifacts();
 		Map<String, List<File>> dependencyMap = new HashMap<String, List<File>>();
 		List<File> libraryFiles = new ArrayList<File>();

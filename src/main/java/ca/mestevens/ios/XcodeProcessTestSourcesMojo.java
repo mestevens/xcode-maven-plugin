@@ -87,6 +87,10 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 		if (addDependencies) {
 			try {
 				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
+				if (!projectUtil.containsTestTarget()) {
+					getLog().info("No test target found.");
+					return;
+				}
 				if (addTestDependencies) {
 					if (dependencyTestTargets == null) {
 						dependencyTestTargets = new ArrayList<String>();
