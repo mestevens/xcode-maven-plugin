@@ -99,7 +99,7 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 						dependencyTestTargets.add(project.getArtifactId() + "Tests");
 					}
 					for (String target : dependencyTestTargets) {
-						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
+						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"), null);
 					}
 				}
 				projectUtil.writeProject();
