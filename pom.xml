@@ -3,7 +3,7 @@
 
 	<groupId>ca.mestevens.ios</groupId>
 	<artifactId>xcode-maven-plugin</artifactId>
-	<version>0.9.2-SNAPSHOT</version>
+	<version>0.9.2</version>
 	<packaging>maven-plugin</packaging>
 	<name>xcode-maven-plugin</name>
 	<description>A maven plugin to facilitate xcode building/dependency management/testing</description>
