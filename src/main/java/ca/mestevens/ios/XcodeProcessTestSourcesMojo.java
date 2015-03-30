@@ -87,6 +87,10 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 		if (addDependencies) {
 			try {
 				XcodeProjectUtil projectUtil = new XcodeProjectUtil(xcodeProject + "/project.pbxproj");
+				if (!projectUtil.containsTestTarget()) {
+					getLog().info("No test target found.");
+					return;
+				}
 				if (addTestDependencies) {
 					if (dependencyTestTargets == null) {
 						dependencyTestTargets = new ArrayList<String>();
@@ -95,7 +99,7 @@ public class XcodeProcessTestSourcesMojo extends AbstractMojo {
 						dependencyTestTargets.add(project.getArtifactId() + "Tests");
 					}
 					for (String target : dependencyTestTargets) {
-						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
+						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"), null);
 					}
 				}
 				projectUtil.writeProject();

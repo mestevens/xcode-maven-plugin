@@ -14,6 +14,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
+import ca.mestevens.ios.models.Dependency;
 import ca.mestevens.ios.utils.CopyDependenciesUtil;
 import ca.mestevens.ios.utils.ProcessRunner;
 import ca.mestevens.ios.utils.XcodeProjectUtil;
@@ -77,6 +78,12 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 	@Parameter
 	public List<String> dependencyTestTargets;
 	
+	/**
+	 * Any external dependencies that you want to add that have not been built in a way this plugin is familiar with.
+	 */
+	@Parameter
+	public List<Dependency> externalDependencies;
+	
 	public ProcessRunner processRunner;
 	public CopyDependenciesUtil copyDependenciesUtil;
 	
@@ -86,6 +93,7 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info("Starting execution");
+		System.out.println(externalDependencies);
 		
 		copyDependenciesUtil = new CopyDependenciesUtil(project, getLog(), processRunner);
 		
@@ -100,17 +108,21 @@ public class XcodeProcessSourcesMojo extends AbstractMojo {
 					dependencyTargets.add(project.getArtifactId());
 				}
 				for (String target : dependencyTargets) {
-					projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
+					projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"), externalDependencies);
 				}
 				if (addTestDependencies) {
-					if (dependencyTestTargets == null) {
-						dependencyTestTargets = new ArrayList<String>();
-					}
-					if (dependencyTestTargets.isEmpty()) {
-						dependencyTestTargets.add(project.getArtifactId() + "Tests");
-					}
-					for (String target : dependencyTestTargets) {
-						projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"));
+					if (!projectUtil.containsTestTarget()) {
+						getLog().info("No test target found.");
+					} else {
+						if (dependencyTestTargets == null) {
+							dependencyTestTargets = new ArrayList<String>();
+						}
+						if (dependencyTestTargets.isEmpty()) {
+							dependencyTestTargets.add(project.getArtifactId() + "Tests");
+						}
+						for (String target : dependencyTestTargets) {
+							projectUtil.addDependenciesToTarget(target, dependencyMap.get("dynamic-frameworks"), dependencyMap.get("static-frameworks"), dependencyMap.get("libraries"), externalDependencies);
+						}
 					}
 				}
 				projectUtil.writeProject();
