@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 @Test(groups = "automated")
 public class XcodeTestMojoTest {
 	
-	private final String projectStringPath = Thread.currentThread().getContextClassLoader().getResource("project.pbxproj").getPath();
+	private final String projectStringPath = Thread.currentThread().getContextClassLoader().getResource("test.xcodeproj").getPath().toString() + "/project.pbxproj";
 	private final String projectString = projectStringPath.substring(0, projectStringPath.lastIndexOf('/'));
 	private final String xcodebuild = "xcodebuild";
 	private final String xcodeScheme = "test-scheme";

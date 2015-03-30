@@ -11,5 +11,6 @@ public class Dependency {
 
 	private String name;
 	private String path;
+	private String type;
 	
 }

@@ -26,7 +26,7 @@ public class XcodeBuildMojoTest {
 	private final String xcodebuild = "xcodebuild";
 	private final String artifactName = "test-artifact-name";
 	private final String target = "target";
-	private final String pbxprojPathString = Thread.currentThread().getContextClassLoader().getResource("project.pbxproj").getPath().toString().replace("/project.pbxproj",  "");
+	private final String pbxprojPathString = Thread.currentThread().getContextClassLoader().getResource("test.xcodeproj").getPath().toString() + "/project.pbxproj".replace("/project.pbxproj",  "");
 	private MavenProject mockProject;
 	private Log mockLog;
 	private ProcessRunner mockProcessRunner;

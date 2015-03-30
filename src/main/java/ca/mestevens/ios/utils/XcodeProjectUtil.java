@@ -13,7 +13,6 @@ import lombok.Data;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import ca.mestevens.ios.models.Dependency;
-import ca.mestevens.ios.xcode.parser.exceptions.FileReferenceDoesNotExistException;
 import ca.mestevens.ios.xcode.parser.exceptions.InvalidObjectFormatException;
 import ca.mestevens.ios.xcode.parser.models.CommentedIdentifier;
 import ca.mestevens.ios.xcode.parser.models.PBXBuildFile;
@@ -63,30 +62,20 @@ public class XcodeProjectUtil {
 			masterFileList.addAll(staticFrameworks);
 			masterFileList.addAll(dynamicFrameworks);
 			
-			//Format the external dependencies
-			List<File> externalDependencyFiles = new ArrayList<File>();
-			for(Dependency dependency : externalDependencies) {
-				if (!dependency.getName().endsWith(".framework")) {
-					dependency.setName(dependency.getName() + ".framework");
-				}
-				File file = null;
-				if (dependency.getPath() == null) {
-					file = new File("/System/Library/Frameworks/" + dependency.getName());
-				} else {
-					file = new File(dependency.getPath());
-				}
-				if (file != null) {
-					externalDependencyFiles.add(file);
-				}
-			}
-			
 			//Add the file/build file references
-			List<CommentedIdentifier> fileReferenceIdentifiers = addFileReferences(masterFileList);
-			fileReferenceIdentifiers.addAll(addExternalFileReferences(externalDependencyFiles));
-			List<CommentedIdentifier> libraryBuildIdentifiers = addBuildFiles(libraries, false, false);
-			List<CommentedIdentifier> staticFrameworkBuildIdentifiers = addBuildFiles(staticFrameworks, false, false);
-			List<CommentedIdentifier> externalFrameworkBuildIdentifiers = addBuildFiles(externalDependencyFiles, false, true);
-			List<CommentedIdentifier> dynamicFrameworkBuildIdentifiers = addBuildFiles(dynamicFrameworks, true, false);
+			List<CommentedIdentifier> fileReferenceIdentifiers = new ArrayList<CommentedIdentifier>();
+			List<CommentedIdentifier> libraryFileReferences = addFileReferences(libraries);
+			List<CommentedIdentifier> staticFrameworkFileReferences = addFileReferences(staticFrameworks);
+			List<CommentedIdentifier> dynamicFrameworkFileReferences = addFileReferences(dynamicFrameworks);
+			List<CommentedIdentifier> externalFileReferences = addExternalFileReferences(externalDependencies);
+			fileReferenceIdentifiers.addAll(libraryFileReferences);
+			fileReferenceIdentifiers.addAll(staticFrameworkFileReferences);
+			fileReferenceIdentifiers.addAll(dynamicFrameworkFileReferences);
+			fileReferenceIdentifiers.addAll(externalFileReferences);
+			List<CommentedIdentifier> libraryBuildIdentifiers = addBuildFiles(libraryFileReferences, false);
+			List<CommentedIdentifier> staticFrameworkBuildIdentifiers = addBuildFiles(staticFrameworkFileReferences, false);
+			List<CommentedIdentifier> externalFrameworkBuildIdentifiers = addBuildFiles(externalFileReferences, false);
+			List<CommentedIdentifier> dynamicFrameworkBuildIdentifiers = addBuildFiles(dynamicFrameworkFileReferences, true);
 			//Get the target
 			PBXTarget target = getNativeTarget(targetName);
 			//Link the static libraries
@@ -148,27 +137,33 @@ public class XcodeProjectUtil {
 		}
 	}
 	
-	public List<CommentedIdentifier> addBuildFiles(List<File> files, boolean dynamicFrameworks, boolean externalFrameworks) throws FileReferenceDoesNotExistException {
-		//Add the framework files as file references and build files
+	public List<CommentedIdentifier> addBuildFiles(List<CommentedIdentifier> fileReferences, boolean embed) {
 		List<CommentedIdentifier> buildFileReferences = new ArrayList<CommentedIdentifier>();
-		for (File dependencyFile : files) {
-			String fileExtension = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf('.') + 1);
-			if (fileExtension.equals("framework") && !dynamicFrameworks && !externalFrameworks) {
-				File staticLibrary = new File(dependencyFile.getAbsolutePath() + "/" + dependencyFile.getName().substring(0, dependencyFile.getName().lastIndexOf(".")));
-				if (!staticLibrary.exists()) {
-					continue;
+		String xcodeProjLocation = pbxProjLocation.substring(0, pbxProjLocation.lastIndexOf("/project.pbxproj"));
+		for(CommentedIdentifier fileReference : fileReferences) {
+			boolean skip = false;
+			for(PBXFileElement fileElement : xcodeProject.getFileReferences()) {
+				if (fileElement.getReference().getIdentifier().equals(fileReference.getIdentifier())) {
+					String path = fileElement.getPath();
+					if (path.startsWith("\"") && path.endsWith("\"")) {
+						path = path.substring(1);
+						path = path.substring(0, path.length() - 1);
+					}
+					String fileName = fileElement.getReference().getComment();
+					if (fileName.endsWith(".framework")) {
+						fileName = fileName.substring(0, fileName.lastIndexOf("."));
+						path += "/" + fileName;
+					}		
+					File file = new File(xcodeProjLocation + "/../" + path);
+					if (fileElement.getSourceTree().equals("SOURCE_ROOT") && !file.exists()) {
+						skip = true;
+					}
 				}
 			}
-			String frameworkPath = "";
-			if (externalFrameworks) {
-				frameworkPath = "System/Library/Frameworks/" + dependencyFile.getName();
-			} else {
-				frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf("target"));
+			if (skip) {
+				continue;
 			}
-			List<PBXBuildFile> buildFiles = xcodeProject.getBuildFileWithFileRefPath(frameworkPath);
-			if (buildFiles.isEmpty()) {
-				buildFiles = xcodeProject.getBuildFileWithFileRefPath("\"" + frameworkPath + "\"");
-			}
+			List<PBXBuildFile> buildFiles = xcodeProject.getBuildFileWithFileRef(fileReference.getIdentifier());
 			//Check for duplicates and remove them
 			if (buildFiles.size() > 1) {
 				Iterator<PBXBuildFile> buildFileIterator = buildFiles.iterator();
@@ -193,17 +188,19 @@ public class XcodeProjectUtil {
 			}
 			PBXBuildFile buildFile = null;
 			for (PBXBuildFile existingFile : buildFiles) {
-				if (existingFile.getReference().getComment().contains(dependencyFile.getName() + " in Frameworks")) {
+				if (existingFile.getReference().getComment().contains(fileReference.getComment() + " in Frameworks")) {
 					buildFile = existingFile;
-				} else if (existingFile.getReference().getComment().contains(dependencyFile.getName() + " in Embed Frameworks")) {
+				} else if (existingFile.getReference().getComment().contains(fileReference.getComment() + " in Embed Frameworks")) {
 					buildFile = existingFile;
 				}
 			}
-			if (buildFile == null && dynamicFrameworks) {
-				buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, dependencyFile.getName() + " in Embed Frameworks");
+			if (buildFile == null && embed) {
+				buildFile = new PBXBuildFile(fileReference.getComment() + " in Embed Frameworks", fileReference.getIdentifier());
 				buildFile.getSettings().put("ATTRIBUTES", "(CodeSignOnCopy, )");
+				xcodeProject.getBuildFiles().add(buildFile);
 			} else if (buildFile == null) {
-				buildFile = xcodeProject.createBuildFileFromFileReferencePath(frameworkPath, dependencyFile.getName() + " in Frameworks");
+				buildFile = new PBXBuildFile(fileReference.getComment() + " in Frameworks", fileReference.getIdentifier());
+				xcodeProject.getBuildFiles().add(buildFile);
 			}
 			buildFileReferences.add(buildFile.getReference());
 		}
@@ -226,18 +223,22 @@ public class XcodeProjectUtil {
 		return fileReferences;
 	}
 	
-	public List<CommentedIdentifier> addExternalFileReferences(List<File> files) {
+	public List<CommentedIdentifier> addExternalFileReferences(List<Dependency> dependencies) {
 		List<CommentedIdentifier> fileReferences = new ArrayList<CommentedIdentifier>();
-		for (File dependencyFile : files) {
-			PBXFileElement fileReference = xcodeProject.getFileReferenceWithPath(dependencyFile.getAbsolutePath());
+		for (Dependency dependencyFile : dependencies) {
+			String path = dependencyFile.getPath();
+			if (path == null) {
+				path = "System/Library/Frameworks/" + dependencyFile.getName() + ".framework";
+			}
+			PBXFileElement fileReference = xcodeProject.getFileReferenceWithPath(path);
 			if (fileReference == null) {
-				fileReference = xcodeProject.getFileReferenceWithPath("\"" + dependencyFile.getAbsolutePath() + "\"");
+				fileReference = xcodeProject.getFileReferenceWithPath("\"" + path + "\"");
 				if (fileReference == null) {
 					String sourceTree = "SDKROOT";
-					if (!dependencyFile.getAbsolutePath().contains("System/Library/Frameworks/")) {
+					if (!(dependencyFile.getPath() == null)) {
 						sourceTree = "SOURCE_ROOT";
 					}
-					fileReference = xcodeProject.createFileReference("System/Library/Frameworks/" + dependencyFile.getName(), sourceTree);
+					fileReference = xcodeProject.createFileReference(path, sourceTree);
 				}
 			}
 			fileReferences.add(fileReference.getReference());
