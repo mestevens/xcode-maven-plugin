@@ -335,7 +335,7 @@ public class XcodeBuildMojoTest {
 		buildMojo.deviceArchs = deviceArchs;
 
 		buildMojo.execute();
-		verify(mockProcessRunner, times(1)).runProcess(target, lipoCommand.toArray(new String[lipoCommand.size()]));
+		verify(mockProcessRunner, times(0)).runProcess(target, lipoCommand.toArray(new String[lipoCommand.size()]));
 		for (String simulatorArch : simulatorArchs) {
 			verify(mockProcessRunner, times(1)).runProcess(null, xcodebuild, "-project", projectString, "-scheme", schemeString, "-sdk", "iphonesimulator",
 					"-arch", simulatorArch, "CONFIGURATION_BUILD_DIR=" + target + "/iphonesimulator-" + simulatorArch, "build");

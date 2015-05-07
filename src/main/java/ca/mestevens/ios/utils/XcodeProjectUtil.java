@@ -210,6 +210,9 @@ public class XcodeProjectUtil {
 	public List<CommentedIdentifier> addFileReferences(List<File> files) {
 		List<CommentedIdentifier> fileReferences = new ArrayList<CommentedIdentifier>();
 		for (File dependencyFile : files) {
+			if (!dependencyFile.exists()) {
+				continue;
+			}
 			String frameworkPath = dependencyFile.getAbsolutePath().substring(dependencyFile.getAbsolutePath().lastIndexOf("target"));
 			PBXFileElement fileReference = xcodeProject.getFileReferenceWithPath(frameworkPath);
 			if (fileReference == null) {
