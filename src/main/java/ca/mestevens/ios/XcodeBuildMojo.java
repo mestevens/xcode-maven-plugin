@@ -260,8 +260,8 @@ public class XcodeBuildMojo extends AbstractMojo {
 						fileExists = true;
 					}
 				}
-
-				if (fileExists || !packaging.equals("xcode-static-framework")) {
+System.out.println(!packaging.equals("xcode-library"));
+				if (fileExists || (!packaging.equals("xcode-static-framework") && !packaging.equals("xcode-library"))) {
 					returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 					checkReturnValue(returnValue);
 				}
