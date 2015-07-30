@@ -170,23 +170,25 @@ public class XcodeBuildMojo extends AbstractMojo {
 			}
 			if (deviceArchs == null) {
 				deviceArchs = new ArrayList<String>();
-				File pbxprojFile = new File(xcodeProject + "/project.pbxproj");
-				if (pbxprojFile.exists()) {
-					try {
-						XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
-						XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
-						for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
-							XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
-							if (buildConfiguration != null) {
-								List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
-								if (archs != null) {
-									deviceArchs = archs;
-									break;
+				if (xcodeProject != null && !xcodeProject.isEmpty()) {
+					File pbxprojFile = new File(xcodeProject + "/project.pbxproj");
+					if (pbxprojFile.exists()) {
+						try {
+							XCodeProject project = new XCodeProject(xcodeProject + "/project.pbxproj");
+							XCConfigurationList mainConfiguration = project.getConfigurationListWithIdentifier(project.getProject().getBuildConfigurationList().getIdentifier());
+							for (CommentedIdentifier configuration : mainConfiguration.getBuildConfigurations()) {
+								XCBuildConfiguration buildConfiguration = project.getBuildConfigurationWithIdentifier(configuration.getIdentifier());
+								if (buildConfiguration != null) {
+									List<String> archs = buildConfiguration.getBuildSettingAsList("ARCHS");
+									if (archs != null) {
+										deviceArchs = archs;
+										break;
+									}
 								}
 							}
+						} catch (InvalidObjectFormatException e) {
+							throw new MojoExecutionException(e.getMessage());
 						}
-					} catch (InvalidObjectFormatException e) {
-						throw new MojoExecutionException(e.getMessage());
 					}
 				}
 				if (deviceArchs.isEmpty()) {
@@ -260,7 +262,7 @@ public class XcodeBuildMojo extends AbstractMojo {
 						fileExists = true;
 					}
 				}
-System.out.println(!packaging.equals("xcode-library"));
+
 				if (fileExists || (!packaging.equals("xcode-static-framework") && !packaging.equals("xcode-library"))) {
 					returnValue = processRunner.runProcess(targetDirectory, lipoCommand.toArray(new String[lipoCommand.size()]));
 					checkReturnValue(returnValue);
@@ -330,8 +332,10 @@ System.out.println(!packaging.equals("xcode-library"));
 	protected List<String> createCommonBuildCommands() {
 		List<String> buildCommands = new ArrayList<String>();
 		buildCommands.add(xcodebuild);
-		buildCommands.add("-project");
-		buildCommands.add(xcodeProject);
+		if (xcodeWorkspace == null || xcodeWorkspace.isEmpty()) {
+			buildCommands.add("-project");
+			buildCommands.add(xcodeProject);
+		}
 		buildCommands.add("-scheme");
 		buildCommands.add(xcodeScheme);
 		if (xcodeTarget != null && !xcodeTarget.isEmpty()) {
